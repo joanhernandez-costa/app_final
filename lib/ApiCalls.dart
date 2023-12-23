@@ -24,6 +24,9 @@ class ApiCalls {
           .map((itemJson) => fromJson(itemJson as Map<String, dynamic>))
           .toList();
         
+        // Hacer algo con items.
+        print(items);
+
         return true;
       } else {
         print('Error: ${response.statusCode}. Respuesta: ${response.body}');

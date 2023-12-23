@@ -13,8 +13,6 @@ void main() async {
 class MainApp extends StatelessWidget {
   MainApp({super.key});
 
-  bool _rememberMe = false;
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,11 +20,7 @@ class MainApp extends StatelessWidget {
         future: initializeSettings(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            if (_rememberMe) {
-              return const HomeScreen();
-            } else {
-              return const SignInScreen();
-            }
+            return const SignInScreen();
           } else {
             return const LoadingScreen();
           }
@@ -37,7 +31,6 @@ class MainApp extends StatelessWidget {
 
   Future<void> initializeSettings() async {
     await Time.waitForSeconds(3);
-    _rememberMe = await SaveLoad.loadBool("rememberMe");
   }
 }
 

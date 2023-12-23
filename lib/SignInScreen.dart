@@ -14,13 +14,32 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  User? currentUser;
+  late User currentUser;
   bool _rememberMe = false;
-  bool _alreadySignedIn = false;
   bool _isButtonRed  = false;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCredentials();
+  }
+
+  Future<void> _loadCredentials() async {
+    _rememberMe = await SaveLoad.loadBool("rememberMe");
+    if (_rememberMe) {
+      User? user = await SaveLoad.loadGenericObject<User>("currentUser", User.fromJson);
+
+      if (user != null) {
+        setState(() {
+          _emailController.text = user.mail ?? 'mail';
+          _passwordController.text = user.password ?? 'password';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,16 +60,18 @@ class _SignInScreenState extends State<SignInScreen> {
                   height: 100.0,
                 ),
                 const SizedBox(height: 40.0),
-                const TextField(
-                  decoration: InputDecoration(
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
                     labelText: 'Correo electrónico',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 10.0),
-                const TextField(
-                  decoration: InputDecoration(
+                TextField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
                     labelText: 'Contraseña',
                     border: OutlineInputBorder(),
                   ),
@@ -94,13 +115,13 @@ class _SignInScreenState extends State<SignInScreen> {
                         bool isValid = validateCredentials(mail, password);
 
                         if (isValid) {
-                          if (_rememberMe) {
-                            currentUser = User(mail: mail, password: password);
-                            SaveLoad.saveGenericObject("currentUser", currentUser, currentUser!.toJson);
+                          currentUser = User.full(mail: mail, password: password); 
+                          if (_rememberMe) {            
+                            SaveLoad.saveGenericObject("currentUser", currentUser);
                             SaveLoad.saveBool("rememberMe", _rememberMe);
-                          } else {
-                            Navigation.replaceScreen(context, const HomeScreen());
-                          }
+                          } 
+
+                          Navigation.replaceScreen(context, const HomeScreen());
                         } else {
                           setState(() {
                             _isButtonRed = true;

@@ -1,9 +1,13 @@
 
-class User {
-  String mail;
-  String password;
+import 'package:app_final/SaveLoad.dart';
 
-  User({
+class User implements ObjectWithJson{
+  String? mail;
+  String? password;
+
+  User(){}
+
+  User.full({
     required this.mail,
     required this.password,
   });
@@ -14,11 +18,11 @@ class User {
       'password': password,
     };
   }
-
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      mail: json['mail'],
-      password: json['password'],
+  
+  static User fromJson(Map<String, dynamic> json) {
+    return User.full(
+      mail: json['mail'] as String? ?? '',
+      password: json['password'] as String  ?? '',
     );
   }
 }
