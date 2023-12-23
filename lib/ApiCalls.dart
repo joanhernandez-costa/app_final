@@ -4,13 +4,13 @@ import 'package:app_final/Time.dart';
 
 class ApiCalls {
   static const int maxRetries = 3;
-  static const String baseUrl = 'https://sinwteyuxnhspcygffkl.supabase.co/rest/v1/games';
+  static const String baseUrl = 'https://nkmqlnfejowcintlfspl.supabase.co';
 
   static Future<bool> getAllItems<T>({int retries = 0, required T Function(Map<String, dynamic>) fromJson}) async {
     Uri uri = Uri.parse('$baseUrl?select=*');
     final headers = {
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpbnd0ZXl1eG5oc3BjeWdmZmtsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwMzA4OTM1NywiZXhwIjoyMDE4NjY1MzU3fQ.bAAm5hfglfyZOtUe625LQQwU5w9ArXOgeQu6YBqt5jE',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpbnd0ZXl1eG5oc3BjeWdmZmtsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwMzA4OTM1NywiZXhwIjoyMDE4NjY1MzU3fQ.bAAm5hfglfyZOtUe625LQQwU5w9ArXOgeQu6YBqt5jE'
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rbXFsbmZlam93Y2ludGxmc3BsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NjMxNzM3NiwiZXhwIjoyMDExODkzMzc2fQ.nFOJiBzM2VYJ_aEpv6WoPhtMBjdIiAZtcR1ckkLC6gQ',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rbXFsbmZlam93Y2ludGxmc3BsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NjMxNzM3NiwiZXhwIjoyMDExODkzMzc2fQ.nFOJiBzM2VYJ_aEpv6WoPhtMBjdIiAZtcR1ckkLC6gQ'
     };
 
     print('Obteniendo elementos...');

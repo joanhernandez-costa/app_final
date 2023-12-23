@@ -15,4 +15,14 @@ class SaveLoad {
     return fromJson(json.decode(jsonString));
   }
 
+  static Future<void> saveBool(String key, bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+  }
+
+  static Future<bool> loadBool(String key, {bool defaultValue = false}) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(key) ?? defaultValue;
+  }
+
 }
