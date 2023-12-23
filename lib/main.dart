@@ -1,4 +1,6 @@
+import 'package:app_final/SignInScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:app_final/Time.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +18,7 @@ class MainApp extends StatelessWidget {
         future: initializeSettings(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return HomeScreen();
+            return const SignInScreen();
           } else {
             return const LoadingScreen();
           }
@@ -28,7 +30,6 @@ class MainApp extends StatelessWidget {
   Future<void> initializeSettings() async {
     await Time.waitForSeconds(3);
   }
-
 }
 
 class LoadingScreen extends StatelessWidget {

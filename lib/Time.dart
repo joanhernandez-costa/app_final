@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:tarea_flutter/SettingsScreen.dart';
-
 class Time {
   
   static Future<void> waitForSeconds(int seconds) async {
@@ -10,14 +8,14 @@ class Time {
   }
 
   Timer? timer;
+  bool isPaused = false;
 
   int seconds = 0;
   int minutes = 0;
-  int timeLimit = 0;
-  double progress = 0;
+  
   VoidCallback? onUpdate;
 
-  void startTimer(VoidCallback updateCallback) {
+  void startTimer(VoidCallback? updateCallback) {
     onUpdate = updateCallback;
     timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => timeStepUpdate());
   }
@@ -28,8 +26,8 @@ class Time {
       minutes++;
       seconds = 0;
     }
-    progress = updateProgress();
-    onUpdate?.call(); 
+
+    if (onUpdate != null) onUpdate?.call(); 
   }
 
   void startIntervalTimer(int timeInterval, VoidCallback function) {
@@ -37,6 +35,8 @@ class Time {
   }
 
   void stopTimer() {
+    seconds = 0;
+    minutes = 0;
     timer?.cancel();
   }
 
@@ -44,12 +44,18 @@ class Time {
     return seconds > 9 ? "0$minutes:$seconds" : "0$minutes:0$seconds";
   }
 
-  double updateProgress() {
-    timeLimit = currentSettings?.timeLimit ?? 60;
-    if (timeLimit == 0) return 0.0;
-    progress = seconds / timeLimit;
-    if (progress == 1) return -1.0;
-    
-    return progress;
+  void pauseTimer() {
+    if (timer != null && timer!.isActive) {
+      timer!.cancel();
+      isPaused = true;
+    }
   }
+
+  void resumeTimer() {
+    if (isPaused) {
+      startTimer(onUpdate!);
+      isPaused = false;
+    }
+  }
+
 }
