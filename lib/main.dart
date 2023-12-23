@@ -16,18 +16,20 @@ class MainApp extends StatelessWidget {
         future: initializeSettings(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            // Carga completada, navegar a la pantalla principal
-            return HomeScreen(); // Reemplaza HomeScreen con tu pantalla principal
+            return HomeScreen();
           } else {
-            // Mientras se carga, muestra la pantalla de carga
             return const LoadingScreen();
           }
         },
       ),
     );
   }
-}
 
+  Future<void> initializeSettings() async {
+    await Time.waitForSeconds(3);
+  }
+
+}
 
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({super.key});
@@ -41,3 +43,4 @@ class LoadingScreen extends StatelessWidget {
     );
   }
 }
+
