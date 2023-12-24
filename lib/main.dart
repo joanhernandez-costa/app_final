@@ -34,7 +34,7 @@ class MainApp extends StatelessWidget {
     Supabase.initialize(anonKey: dotenv.env['SUPABASE_KEY']!,
                           url: dotenv.env['SUPABASE_URL']!);
 
-    app_user.User.registeredUsers = await ApiCalls.getAllItems<app_user.User>(fromJson: app_user.User.fromJson);
+    app_user.AppUser.registeredUsers = await ApiCalls.getAllItems<app_user.AppUser>(fromJson: app_user.AppUser.fromJson);
   }
 }
 

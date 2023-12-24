@@ -1,20 +1,25 @@
 
-class User {
+class AppUser {
   String? userName;
   String? mail;
   String? password;
 
-  User(){}
+  AppUser(){}
 
-  User.full({
+  AppUser.full({
     required this.userName,
     required this.mail,
     required this.password,
   });
 
-  static List<User> registeredUsers = [];
+  AppUser.singingIn({
+    required this.userName,
+    required this.password,
+  });
 
-  static Map<String, dynamic> toJson(User user) {
+  static List<AppUser> registeredUsers = [];
+
+  static Map<String, dynamic> toJson(AppUser user) {
     return {
       'userName': user.userName,
       'mail': user.mail,
@@ -22,8 +27,8 @@ class User {
     };
   }
   
-  static User fromJson(Map<String, dynamic> json) {
-    return User.full(
+  static AppUser fromJson(Map<String, dynamic> json) {
+    return AppUser.full(
       userName: json['userName'] as String,
       mail: json['mail'] as String,
       password: json['password'] as String,

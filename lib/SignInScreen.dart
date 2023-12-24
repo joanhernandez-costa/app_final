@@ -6,6 +6,8 @@ import 'package:app_final/User.dart';
 import 'package:flutter/material.dart';
 import 'package:app_final/SignUpScreen.dart';
 import 'package:app_final/HomeScreen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bcrypt/bcrypt.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -15,11 +17,12 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  late User currentUser;
-  bool _rememberMe = false;
-  bool _isButtonRed  = false;
+  late AppUser? currentUser;
+  AppUser? newUser;
 
-  final TextEditingController _userNameController = TextEditingController();
+  bool _rememberMe = false;
+
+  final TextEditingController _mailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
@@ -31,16 +34,18 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> _loadCredentials() async {
     _rememberMe = await SaveLoad.loadBool("rememberMe");
     if (_rememberMe) {
-      User? user = await SaveLoad.loadGenericObject<User>("currentUser", User.fromJson);
+      currentUser = await SaveLoad.loadGeneric<AppUser>("currentUser", AppUser.fromJson);
 
-      if (user != null) {
+      if (currentUser != null) {
         setState(() {
-          _userNameController.text = user.userName ?? 'userName';
-          _passwordController.text = user.password ?? 'password';
+          _mailController.text = currentUser!.mail ?? 'mail';
+          _passwordController.text = currentUser!.password ?? 'password';
         });
       }
     }
   }
+
+  final GlobalKey<FormState> _signInFormKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -51,106 +56,164 @@ class _SignInScreenState extends State<SignInScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Image.network(
-                  'https://us.123rf.com/450wm/nuwaba/nuwaba1707/nuwaba170700076/81763793-persona-usuario-icono-de-ilustraci%C3%B3n-de-amigo-vectror-aislado-sobre-fondo-gris.jpg',
-                  width: 100.0,
-                  height: 100.0,
+        child: Form(
+          key: _signInFormKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Image.network(
+                'https://us.123rf.com/450wm/nuwaba/nuwaba1707/nuwaba170700076/81763793-persona-usuario-icono-de-ilustraci%C3%B3n-de-amigo-vectror-aislado-sobre-fondo-gris.jpg',
+                width: 100.0,
+                height: 100.0,
+              ),
+              const SizedBox(height: 40.0),
+              TextFormField(
+                controller: _mailController,
+                decoration: const InputDecoration(
+                  labelText: 'Correo electrónico',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 40.0),
-                TextField(
-                  controller: _userNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre de usuario',
-                    border: OutlineInputBorder(),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) => mailValidator(_mailController.text),
+              ),
+              const SizedBox(height: 10.0),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Contraseña',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+                validator: (value) => passwordValidation(_passwordController.text, newUser),
+              ),
+              const SizedBox(height: 10.0),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _rememberMe = value ?? false;
+                      });
+                    },
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 10.0),
-                TextField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Contraseña',
-                    border: OutlineInputBorder(),
+                  const Text("Recuérdame"),
+                ],
+              ),
+              const SizedBox(height: 20.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigation.replaceScreen(context, const SignUpScreen());
+                    },
+                    child: const Text(
+                      "No estoy registrado",
+                      style: TextStyle(color: Colors.orange),
+                    ),
                   ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 10.0),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          _rememberMe = value ?? false;
-                        });
-                      },
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
                     ),
-                    const Text("Recuérdame"),
-                  ],
-                ),
-                const SizedBox(height: 20.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigation.replaceScreen(context, SignUpScreen());
-                      },
-                      child: const Text(
-                        "No estoy registrado",
-                        style: TextStyle(color: Colors.orange),
-                      ),
+                    onPressed: signIn,
+                    child: const Text(
+                      "Iniciar sesión",
+                      style: TextStyle(color: Colors.white),
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isButtonRed ? Colors.red : Colors.orange,
-                      ),
-                      onPressed: () async {
-                        String userName = _userNameController.text;
-                        String password = _passwordController.text;
-
-                        bool isValid = validateCredentials(userName, password);
-
-                        if (isValid) {
-                          //currentUser = ApiCalls.getUserWithUserName(userName); 
-                          if (_rememberMe) {            
-                            SaveLoad.saveGenericObject("currentUser", currentUser, User.toJson);
-                            SaveLoad.saveBool("rememberMe", _rememberMe);
-                          } 
-
-                          Navigation.replaceScreen(context, const HomeScreen());
-                        } else {
-                          setState(() {
-                            _isButtonRed = true;
-                          });
-                          await Time.waitForSeconds(2);
-                          setState(() {
-                            _isButtonRed = false;
-                          });
-                        }
-                      },
-                      child: const Text(
-                        "Iniciar sesión",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  void signIn() async {
+      if (_signInFormKey.currentState!.validate()) {
+      String mail = _mailController.text;
+      String password = _passwordController.text;
+
+      AppUser? newUser = await ApiCalls.getUserWithMail(mail);
+      bool isValid = await validateCredentials(mail, password, newUser);
+
+      if (isValid) {
+        // Intenta iniciar sesión con Supabase
+        final AuthResponse response = await Supabase.instance.client.auth.signInWithPassword(email: mail, password: password);
+        
+        if (response.session?.accessToken == null) {
+          print('Error al iniciar sesión');
+        } else {
+          // Si el inicio de sesión es exitoso
+          final String? userToken = response.session?.accessToken;
+
+          if (userToken != null) {
+            SaveLoad.saveString("user_token", userToken);
+            ApiCalls.updateUserToken(userToken);
+          }
+
+          if (newUser != null) {
+            currentUser = newUser;
+            SaveLoad.saveGeneric<AppUser>("currentUser", newUser, AppUser.toJson);
+          }
+
+          if (_rememberMe) {        
+            // Guarda el usuario actual si se ha marcado "Recuérdame"    
+            SaveLoad.saveBool("rememberMe", _rememberMe);
+          }
+
+          Navigation.replaceScreen(context, const HomeScreen());
+        }
+      }
+    }
+  }
   
-  bool validateCredentials(String mail, String password) {
-    return true;
+  Future<bool> validateCredentials(String email, String password, AppUser? user) async {
+    if (user != null) {
+      return BCrypt.checkpw(password, user.password!) && email == user.mail;
+    }
+    return false;
+  }
+
+  String? mailValidator(String? mail) {
+    if (mail == null || mail.isEmpty) {
+      return 'El correo electrónico no puede estar vacío';
+    }
+
+    final RegExp emailRegExp = RegExp(r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+');
+    if (!emailRegExp.hasMatch(mail)) {
+      return 'Introduce una dirección de correo electrónico válida';
+    }
+
+    return null;
+  }
+
+  String? passwordValidation(String? password, AppUser? newUser) {
+    const int minPassLength = 8;
+    if (password == null || password.isEmpty) {
+      return 'La contraseña no puede estar vacía';
+    }
+
+    if (newUser == null) {
+      return 'No hay ninguna cuenta registrada con esta dirección de correo';
+    }
+
+    if (!BCrypt.checkpw(password, newUser.password!)) {
+      return 'La contraseña no es correcta';
+    }
+
+    if (password.length < minPassLength) {
+      return 'La contraseña debe tener al menos $minPassLength caracteres';
+    }
+
+    final RegExp numberRegExp = RegExp(r'\d'); // Expresión regular para detectar números
+    if (!numberRegExp.hasMatch(password)) {
+      return 'La contraseña debe contener al menos un número';
+    }
+
+    return null; // No hay errores
   }
 }
