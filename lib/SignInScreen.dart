@@ -1,3 +1,4 @@
+import 'package:app_final/ApiCalls.dart';
 import 'package:app_final/Navigation.dart';
 import 'package:app_final/SaveLoad.dart';
 import 'package:app_final/Time.dart';
@@ -18,7 +19,7 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _rememberMe = false;
   bool _isButtonRed  = false;
 
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
@@ -34,7 +35,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
       if (user != null) {
         setState(() {
-          _emailController.text = user.mail ?? 'mail';
+          _userNameController.text = user.userName ?? 'userName';
           _passwordController.text = user.password ?? 'password';
         });
       }
@@ -46,6 +47,7 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Inicio de sesión"),
+        backgroundColor: Colors.orange,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -61,9 +63,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 const SizedBox(height: 40.0),
                 TextField(
-                  controller: _emailController,
+                  controller: _userNameController,
                   decoration: const InputDecoration(
-                    labelText: 'Correo electrónico',
+                    labelText: 'Nombre de usuario',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
@@ -97,7 +99,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        Navigation.replaceScreen(context, const SignUpScreen());
+                        Navigation.replaceScreen(context, SignUpScreen());
                       },
                       child: const Text(
                         "No estoy registrado",
@@ -109,15 +111,15 @@ class _SignInScreenState extends State<SignInScreen> {
                         backgroundColor: _isButtonRed ? Colors.red : Colors.orange,
                       ),
                       onPressed: () async {
-                        String mail = _emailController.text;
+                        String userName = _userNameController.text;
                         String password = _passwordController.text;
 
-                        bool isValid = validateCredentials(mail, password);
+                        bool isValid = validateCredentials(userName, password);
 
                         if (isValid) {
-                          currentUser = User.full(mail: mail, password: password); 
+                          //currentUser = ApiCalls.getUserWithUserName(userName); 
                           if (_rememberMe) {            
-                            SaveLoad.saveGenericObject("currentUser", currentUser);
+                            SaveLoad.saveGenericObject("currentUser", currentUser, User.toJson);
                             SaveLoad.saveBool("rememberMe", _rememberMe);
                           } 
 

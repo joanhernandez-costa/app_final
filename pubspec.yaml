@@ -11,7 +11,8 @@ dependencies:
     sdk: flutter
   http: ^1.1.2
   shared_preferences: ^2.0.13
-
+  supabase_flutter: ^2.0.2
+  flutter_dotenv: ^5.0.2
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +21,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets: 
+    - supabase_initialize.env

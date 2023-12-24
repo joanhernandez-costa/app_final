@@ -38,6 +38,11 @@ class ApiCalls {
     }
   }
 
+  static Future<bool> getUserWithUserName(String userName) async {
+    Time.waitForSeconds(2);
+    return true;
+  }
+
   static Future<void> postItem<T>(T item, {int retries = 0, required Map<String, dynamic> Function(T) toJson}) async {
     Uri uri = Uri.parse(baseUrl);
     final headers = { 

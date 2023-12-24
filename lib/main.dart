@@ -3,10 +3,16 @@ import 'package:app_final/SaveLoad.dart';
 import 'package:app_final/SignInScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:app_final/Time.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //currentSettings = await SaveLoad.loadSettings();
+  
+  await dotenv.load(fileName: 'supabase_initialize.env');
+  Supabase.initialize(anonKey: dotenv.env['SUPABASE_KEY']!,
+                      url: dotenv.env['SUPABASE_URL']!);
+
   runApp(MainApp());
 }
 
