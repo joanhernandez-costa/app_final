@@ -1,23 +1,23 @@
 import 'package:app_final/ApiCalls.dart';
+import 'package:app_final/HomeScreen.dart';
+import 'package:app_final/Navigation.dart';
+import 'package:app_final/Time.dart';
 import 'package:app_final/User.dart';
 import 'package:flutter/material.dart';
 
 class SignUpScreen extends StatefulWidget {
-  SignUpScreen({super.key});
+  const SignUpScreen({super.key});
 
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _mailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _repeatPasswordController = TextEditingController();
-
-  bool _isUserNameValid = true;
-  bool _isEmailValid = true;
-  bool _isPasswordValid = true;
 
   User? newUser;
 
@@ -32,80 +32,62 @@ class _SignUpScreenState extends State<SignUpScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Center(
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const SizedBox(height: 40.0),
-                TextField(
-                  controller: _userNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nombre de usuario',
-                    border: const OutlineInputBorder(),
-                    errorBorder: _isUserNameValid ? null : const OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
+            child: Form( 
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const SizedBox(height: 40.0),
+                  TextFormField(
+                    controller: _userNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre de usuario',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => validateUserName(_userNameController.text), 
                   ),
-                ),
-                const SizedBox(height: 10.0),
-                TextField(
-                  controller: _mailController,
-                  decoration: InputDecoration(
-                    labelText: 'Correo electrónico',
-                    border: const OutlineInputBorder(),
-                    errorBorder: _isEmailValid ? null : const OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
+                  const SizedBox(height: 20.0),
+                  TextFormField(
+                    controller: _mailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Correo electrónico',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => validateEmail(_mailController.text), 
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 10.0),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    border: const OutlineInputBorder(),
-                    errorBorder: _isPasswordValid ? null : const OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
+                  const SizedBox(height: 20.0),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(
+                      labelText: 'Contraseña',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => validatePassword(_passwordController.text, _repeatPasswordController.text), 
+                    obscureText: true,
                   ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 10.0),
-                TextField(
-                  controller: _repeatPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'Repetir Contraseña',
-                    border: const OutlineInputBorder(),
-                    errorBorder: _isPasswordValid ? null : const OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
+                  const SizedBox(height: 20.0),
+                  TextFormField(
+                    controller: _repeatPasswordController,
+                    decoration: const InputDecoration(
+                      labelText: 'Repite la contraseña',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => validatePassword(_passwordController.text, _repeatPasswordController.text), 
+                    obscureText: true,
                   ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 20.0),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange, 
+                  const SizedBox(height: 40.0),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange, 
+                    ),
+                    onPressed: _submitForm,
+                    child: const Text(
+                      "Registrarse",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                  onPressed: () {
-                    String newUserName = _userNameController.text;
-                    String newMail = _mailController.text;
-                    String newPassword = _passwordController.text;
-                    String repeatPassword = _repeatPasswordController.text;
-
-                    bool isUserNameValid = validateUserName(newUserName);
-                    bool isEmailValid = validateEmail(newMail);
-                    bool isPasswordValid = validatePassword(newPassword, repeatPassword);
-
-                    if (isUserNameValid && isEmailValid && isPasswordValid) {
-                      newUser = User.full(userName: newUserName, mail: newMail, password: newPassword);
-                      ApiCalls.postItem<User>(newUser!, toJson: User.toJson);
-                    } else {
-                      setState(() {
-                        _isUserNameValid = isUserNameValid;
-                        _isEmailValid = isEmailValid;
-                        _isPasswordValid = isPasswordValid;
-                      });
-                    }
-                  },
-                  child: const Text(
-                    "Registrarse",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -113,21 +95,83 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  bool validateUserName(String userName) {
-    return false;
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) { 
+      
+      String newUserName = _userNameController.text;
+      String newMail = _mailController.text;
+      String newPassword = _passwordController.text;
+      
+      ApiCalls.postItem(User.full(userName: newUserName, mail: newMail, password: newPassword), toJson: User.toJson);
+      Navigation.replaceScreen(context, HomeScreen());
+    }
   }
 
-  bool validateEmail(String email) {
-    final RegExp emailRegExp = RegExp(
-      r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+',
-    );
+  String? validateUserName(String userName) {
+    const int minLength = 3;
+    const int maxLength = 15;
 
-    //return emailRegExp.hasMatch(email);
-    return false;
+    // Comprobar si el nombre de usuario se ha registrado anteriormente.
+    for (User user in User.registeredUsers) {
+      if (user.userName == userName) {
+        return 'Este nombre de usuario ya existe.';
+      }
+    }
+
+    // Comprobar que no esté vacío
+    if (userName.isEmpty) {
+      return 'El nombre de usuario no puede estar vacío';
+    }
+
+    // Comprobar que no exceda el número de caracteres máximo y que supere el mínimo.
+    if (userName.length <= minLength && userName.length >= maxLength) {
+      return 'El nombre de usuario debe tener más de $minLength y menos de $maxLength caracteres';
+    }
+
+    // Expresión regular para validar caracteres permitidos: letras, números y guiones bajos
+    final RegExp regExp = RegExp(r'^[a-zA-Z0-9_]+$');
+    if (!regExp.hasMatch(userName)) {
+      return 'Introduce un nombre de usuario válido';
+    }
+
+    // Si se superan todos los requisitos
+    return null;
   }
 
-  bool validatePassword(String password, String passwordRepeat) {
-    //return password == passwordRepeat;
-    return false;
+  String? validateEmail(String email) {
+    if (email.isEmpty) {
+      return 'El correo electrónico no puede estar vacío';
+    }
+
+    final RegExp emailRegExp = RegExp(r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+');
+    if (!emailRegExp.hasMatch(email)) {
+      return 'Introduce una dirección de correo electrónico válida';
+    }
+
+    return null;
   }
+
+
+  String? validatePassword(String password, String passwordRepeat) {
+    if (password.isEmpty || passwordRepeat.isEmpty) {
+      return 'La contraseña no puede estar vacía';
+    }
+
+    if (password != passwordRepeat) {
+      return 'Las contraseñas no coinciden';
+    }
+
+    const int minLength = 8;
+    if (password.length < minLength) {
+      return 'La contraseña debe tener al menos $minLength caracteres';
+    }
+
+    final RegExp numberRegExp = RegExp(r'\d'); // Expresión regular para detectar números
+    if (!numberRegExp.hasMatch(password)) {
+      return 'La contraseña debe contener al menos un número';
+    }
+
+    return null; // No hay errores
+  }
+
 }

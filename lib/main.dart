@@ -1,18 +1,12 @@
-import 'package:app_final/HomeScreen.dart';
-import 'package:app_final/SaveLoad.dart';
+import 'package:app_final/ApiCalls.dart';
+import 'package:app_final/User.dart' as app_user;
 import 'package:app_final/SignInScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:app_final/Time.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  await dotenv.load(fileName: 'supabase_initialize.env');
-  Supabase.initialize(anonKey: dotenv.env['SUPABASE_KEY']!,
-                      url: dotenv.env['SUPABASE_URL']!);
-
   runApp(MainApp());
 }
 
@@ -36,7 +30,11 @@ class MainApp extends StatelessWidget {
   }
 
   Future<void> initializeSettings() async {
-    await Time.waitForSeconds(3);
+    await dotenv.load(fileName: 'supabase_initialize.env');
+    Supabase.initialize(anonKey: dotenv.env['SUPABASE_KEY']!,
+                          url: dotenv.env['SUPABASE_URL']!);
+
+    app_user.User.registeredUsers = await ApiCalls.getAllItems<app_user.User>(fromJson: app_user.User.fromJson);
   }
 }
 

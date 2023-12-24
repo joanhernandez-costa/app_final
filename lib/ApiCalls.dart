@@ -1,16 +1,20 @@
 import 'dart:convert';
+import 'package:app_final/User.dart';
 import 'package:http/http.dart' as http;
 import 'package:app_final/Time.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiCalls {
   static const int maxRetries = 3;
-  static const String baseUrl = 'https://nkmqlnfejowcintlfspl.supabase.co';
+  static final String baseUrl = dotenv.env['SUPABASE_URL'] ?? '';
 
-  static Future<bool> getAllItems<T>({int retries = 0, required T Function(Map<String, dynamic>) fromJson}) async {
-    Uri uri = Uri.parse('$baseUrl?select=*');
+  static Future<List<T>> getAllItems<T>({int retries = 0, required T Function(Map<String, dynamic>) fromJson}) async {
+    String tableUrl = _typeToTableUrl[T] ?? '';
+    Uri uri = Uri.parse('$baseUrl/$tableUrl?select=*');
     final headers = {
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rbXFsbmZlam93Y2ludGxmc3BsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NjMxNzM3NiwiZXhwIjoyMDExODkzMzc2fQ.nFOJiBzM2VYJ_aEpv6WoPhtMBjdIiAZtcR1ckkLC6gQ',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rbXFsbmZlam93Y2ludGxmc3BsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NjMxNzM3NiwiZXhwIjoyMDExODkzMzc2fQ.nFOJiBzM2VYJ_aEpv6WoPhtMBjdIiAZtcR1ckkLC6gQ'
+      'Content-Type': 'application/json; charset=UTF-8',
+      'apikey': dotenv.env['SUPABASE_KEY'] ?? '',
+      'Authorization': 'Bearer ${dotenv.env['SUPABASE_KEY'] ?? ''}',
     };
 
     print('Obteniendo elementos...');
@@ -19,15 +23,11 @@ class ApiCalls {
       final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
-        print('Elementos obtenidos correctamente.');
+        print('Elementos obtenidos correctamente. ${response.body}');
         List<T> items = (json.decode(response.body) as List)
           .map((itemJson) => fromJson(itemJson as Map<String, dynamic>))
           .toList();
-        
-        // Hacer algo con items.
-        print(items);
-
-        return true;
+        return items;
       } else {
         print('Error: ${response.statusCode}. Respuesta: ${response.body}');
         return await retryGettingItems(retries, fromJson);
@@ -44,11 +44,12 @@ class ApiCalls {
   }
 
   static Future<void> postItem<T>(T item, {int retries = 0, required Map<String, dynamic> Function(T) toJson}) async {
-    Uri uri = Uri.parse(baseUrl);
-    final headers = { 
-      'Content-Type': 'application/json; charset=UTF-8' ,
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpbnd0ZXl1eG5oc3BjeWdmZmtsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwMzA4OTM1NywiZXhwIjoyMDE4NjY1MzU3fQ.bAAm5hfglfyZOtUe625LQQwU5w9ArXOgeQu6YBqt5jE',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpbnd0ZXl1eG5oc3BjeWdmZmtsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwMzA4OTM1NywiZXhwIjoyMDE4NjY1MzU3fQ.bAAm5hfglfyZOtUe625LQQwU5w9ArXOgeQu6YBqt5jE'
+    String tableUrl = _typeToTableUrl[T] ?? '';
+    Uri uri = Uri.parse('$baseUrl$tableUrl');
+    final headers = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'apikey': dotenv.env['SUPABASE_KEY'] ?? '',
+      'Authorization': 'Bearer ${dotenv.env['SUPABASE_KEY'] ?? ''}',
     };
     final jsonBody = jsonEncode(toJson(item));
 
@@ -58,7 +59,7 @@ class ApiCalls {
       final response = await http.post(uri, headers: headers, body: jsonBody);
 
       if (response.statusCode == 201) {
-        print('Partida enviada correctamente.');
+        print('Elemento enviado correctamente. ${response.body}');
       } else {
         print('Error: ${response.statusCode}. Respuesta: ${response.body}');
         retryPostingItem(item, toJson, retries);
@@ -79,14 +80,21 @@ class ApiCalls {
     }
   }
 
-  static Future<bool> retryGettingItems<T>(int retries, T Function(Map<String, dynamic>) fromJson) async {
+  static Future<List<T>> retryGettingItems<T>(int retries, T Function(Map<String, dynamic>) fromJson) async {
     if (retries < maxRetries) {
       print('Reintento ${retries + 1} de $maxRetries...');
       await Time.waitForSeconds(2);
       return await getAllItems(retries: retries + 1, fromJson: fromJson);
     } else {
       print('No se pudo obtener los juegos después de $maxRetries intentos.');
-      return false;
+      List<T> emptyList = [];
+      return emptyList;
     }
   }
+
+  static const Map<Type, String> _typeToTableUrl = {
+    User: '/rest/v1/users',
+    
+  };
 }
+

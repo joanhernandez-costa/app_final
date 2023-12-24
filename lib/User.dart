@@ -1,6 +1,4 @@
 
-import 'package:app_final/SaveLoad.dart';
-
 class User {
   String? userName;
   String? mail;
@@ -14,7 +12,8 @@ class User {
     required this.password,
   });
 
-  
+  static List<User> registeredUsers = [];
+
   static Map<String, dynamic> toJson(User user) {
     return {
       'userName': user.userName,
