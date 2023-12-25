@@ -5,6 +5,7 @@ import 'package:app_final/ApiCalls.dart';
 import 'package:app_final/HomeScreen.dart';
 import 'package:app_final/Navigation.dart';
 import 'package:app_final/SaveLoad.dart';
+import 'package:app_final/ValidationService.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:app_final/User.dart' as app_user;
 import 'package:flutter/material.dart';
@@ -66,7 +67,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       labelText: 'Nombre de usuario',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) => validateUserName(_userNameController.text),
+                    validator: (value) => ValidationService.validateUserName(_userNameController.text),
                   ),
                   const SizedBox(height: 20.0),
                   TextFormField(
@@ -75,7 +76,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       labelText: 'Correo electrónico',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) => validateEmail(_mailController.text),
+                    validator: (value) => ValidationService.validateMail(_mailController.text),
                   ),
                   const SizedBox(height: 20.0),
                   TextFormField(
@@ -89,14 +90,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           _obscureText ? Icons.visibility : Icons.visibility_off,
                         ),
                         onPressed: () {
-                          // Actualiza el estado para mostrar/ocultar la contraseña
                           setState(() {
                             _obscureText = !_obscureText;
                           });
                         },
                       ),
                     ),
-                    validator: (value) => validatePassword(_passwordController.text, _repeatPasswordController.text),
+                    validator: (value) => ValidationService.validatePasswordForSignUp(_passwordController.text, _repeatPasswordController.text),
                     obscureText: _obscureText, // Usa la variable para controlar la visibilidad
                   ),
                   const SizedBox(height: 20.0),
@@ -116,7 +116,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                       ),
                     ),
-                    validator: (value) => validatePassword(_passwordController.text, _repeatPasswordController.text),
+                    validator: (value) => ValidationService.validatePasswordForSignUp(_passwordController.text, _repeatPasswordController.text),
                     obscureText: _obscureText,
                   ),
 
@@ -158,10 +158,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  final int minPassLength = 8;
-  final int maxPassLength = 16;
-
   String _generateRandomPassword() {
+    const int minPassLength = 8;
+    const int maxPassLength = 20;
     const String letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const String digits = '0123456789';
     final Random random = Random();
@@ -201,70 +200,5 @@ class _SignUpScreenState extends State<SignUpScreen> {
       Navigation.replaceScreen(context, HomeScreen());
     }
   }
-
-  String? validateUserName(String userName) {
-    const int minLength = 3;
-    const int maxLength = 15;
-
-    // Comprobar si el nombre de usuario se ha registrado anteriormente.
-    for (app_user.AppUser user in app_user.AppUser.registeredUsers) {
-      if (user.userName == userName) {
-        return 'Este nombre de usuario ya existe.';
-      }
-    }
-
-    // Comprobar que no esté vacío
-    if (userName.isEmpty) {
-      return 'El nombre de usuario no puede estar vacío';
-    }
-
-    // Comprobar que no exceda el número de caracteres máximo y que supere el mínimo.
-    if (userName.length <= minLength && userName.length >= maxLength) {
-      return 'El nombre de usuario debe tener más de $minLength y menos de $maxLength caracteres';
-    }
-
-    // Expresión regular para validar caracteres permitidos: letras, números y guiones bajos
-    final RegExp regExp = RegExp(r'^[a-zA-Z0-9_]+$');
-    if (!regExp.hasMatch(userName)) {
-      return 'Introduce un nombre de usuario válido';
-    }
-
-    // Si se superan todos los requisitos
-    return null;
-  }
-
-  String? validateEmail(String email) {
-    if (email.isEmpty) {
-      return 'El correo electrónico no puede estar vacío';
-    }
-
-    final RegExp emailRegExp = RegExp(r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+');
-    if (!emailRegExp.hasMatch(email)) {
-      return 'Introduce una dirección de correo electrónico válida';
-    }
-
-    return null;
-  }
-
-  String? validatePassword(String password, String passwordRepeat) {
-    if (password.isEmpty || passwordRepeat.isEmpty) {
-      return 'La contraseña no puede estar vacía';
-    }
-
-    if (password != passwordRepeat) {
-      return 'Las contraseñas no coinciden';
-    }
-
-    if (password.length < minPassLength) {
-      return 'La contraseña debe tener al menos $minPassLength caracteres';
-    }
-
-    final RegExp numberRegExp = RegExp(r'\d'); // Expresión regular para detectar números
-    if (!numberRegExp.hasMatch(password)) {
-      return 'La contraseña debe contener al menos un número';
-    }
-
-    return null; // No hay errores
-  }
-
+  
 }

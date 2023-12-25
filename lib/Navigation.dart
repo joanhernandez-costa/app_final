@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Navigation {
+  // Quita la pantalla actual y la sustituye por newScreen.
   static void replaceScreen(BuildContext context, Widget newScreen) {
     removeScreen(context);
     showScreen(context, newScreen);
@@ -19,18 +20,17 @@ class Navigation {
     );
   }
 
+  // Inicia la navegación a una pantalla según su ruta
   static void navigateTo(String routeName, BuildContext context, {Object? arguments}) {
     Navigator.pushNamed(context, routeName, arguments: arguments);
   }
 
+  // Quita la pantalla actual e inicia la navegación a una nueva pantalla según su ruta
   static void replaceWithNamed(String routeName, BuildContext context, {Object? arguments}) {
     Navigator.pushReplacementNamed(context, routeName, arguments: arguments);
   }
 
-  static void popWithResult(BuildContext context, [Object? result]) {
-    Navigator.pop(context, result);
-  }
-
+  // Restablece el árbol de widgets y muestra newScreen.
   static void clearStackAndShowScreen(BuildContext context, Widget newScreen) {
     Navigator.pushAndRemoveUntil(
       context,
@@ -39,16 +39,7 @@ class Navigation {
     );
   }
 
-  static void showAnimatedScreen(BuildContext context, Widget newScreen, RouteTransitionsBuilder transitionBuilder) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => newScreen,
-        transitionsBuilder: transitionBuilder,
-      ),
-    );
-  }
-
+  // Abre una alerta y pide confirmación para salir.
   static Future<bool> confirmExit(BuildContext context, String message) async {
     return (await showDialog(
       context: context,
