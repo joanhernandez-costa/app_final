@@ -60,12 +60,16 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Image.network(
-                lastUser == null || lastUser!.profileImage == null || lastUser!.profileImage!.isEmpty
-                    ? 'https://us.123rf.com/450wm/nuwaba/nuwaba1707/nuwaba170700076/81763793-persona-usuario-icono-de-ilustraci%C3%B3n-de-amigo-vectror-aislado-sobre-fondo-gris.jpg'
-                    : lastUser!.profileImage!,
-                height: 200,
-              ),const SizedBox(height: 40.0),
+              lastUser == null || lastUser!.profileImage == null || lastUser!.profileImage!.isEmpty ?
+                const CircleAvatar(
+                  child: Icon(Icons.person),
+                  radius: 60,
+                ) :
+                Image.network(
+                  lastUser!.profileImage!,
+                  height: 200,
+                ),
+              const SizedBox(height: 40.0),
               TextFormField(
                 controller: _mailController,
                 decoration: const InputDecoration(

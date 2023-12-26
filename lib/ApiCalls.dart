@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:app_final/SaveLoad.dart';
 import 'package:path/path.dart';
 import 'package:app_final/AppUser.dart';
 import 'package:http/http.dart' as http;
@@ -144,6 +143,45 @@ class ApiCalls {
       List<T> emptyList = [];
       return emptyList;
     }
+  }
+
+  // Método para que un usuario pueda actualizar su propio registro.
+  static Future<void> updateUser(AppUser user, Map<String, dynamic> updates) async {
+    String tableUrl = _typeToTableUrl[AppUser] ?? '';
+    Uri uri = Uri.parse('$baseUrl$tableUrl?user_id=eq.${user.userId}');
+    final headers = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'apikey': dotenv.env['SUPABASE_KEY'] ?? '',
+      'Authorization': 'Bearer $userToken',
+    };
+    final jsonBody = jsonEncode(updates);
+
+    print('Actualizando usuario a: $jsonBody');
+
+    try {
+      final response = await http.patch(uri, headers: headers, body: jsonBody);
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print('Usuario actualizado correctamente. ${response.body}');
+      } else {
+        print('Error al actualizar el usuario: ${response.statusCode}. Respuesta: ${response.body}');
+      }
+    } catch (e) {
+      print('Excepción al actualizar el usuario: $e');
+    }
+  }
+
+  // Actualiza
+  static void updateProfile(AppUser newUser) {
+    Map<String, dynamic> updates = {
+      'userName': newUser.userName,
+      'mail': newUser.mail,
+      'password': newUser.password,
+      'profile_image_path': newUser.profileImage,
+      'user_id': newUser.userId,
+    };
+
+    updateUser(newUser, updates);
   }
 
   // Mapea: tipo 'T' => URL de la tabla que almacena T en la base de datos.

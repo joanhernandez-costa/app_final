@@ -1,5 +1,8 @@
 import 'package:app_final/ApiCalls.dart';
 import 'package:app_final/AppUser.dart';
+import 'package:app_final/FavouritesScreen.dart';
+import 'package:app_final/MapScreen.dart';
+import 'package:app_final/ProfileScreen.dart';
 import 'package:app_final/SaveLoad.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
 
   AppUser? currentUser;
+  Widget screenToShow = const MapScreen();
 
   @override
   void initState() {
@@ -27,8 +31,20 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void changeScreen(Widget newScreen) {
+    setState(() {
+      screenToShow = newScreen;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    double iconSize = screenHeight * 0.035;
+    double buttonSpacing = screenWidth * 0.01;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -45,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               currentUser?.userName ?? '',
               style: const TextStyle(
-                height: 1,
+                fontSize: 18,
               ),
             ),
           ],
@@ -54,46 +70,38 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: currentUser == null
         ? const CircularProgressIndicator()
-        : Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              child: Container(
-                color: Colors.green,
-                child: const Center(
-                  child: Text('MAPA AQUÍ'),
-                ),
+        : screenToShow,
+      bottomNavigationBar: SizedBox(
+        height: screenHeight * 0.1,
+        child: BottomAppBar(
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.map, size: iconSize),
+                onPressed: () {
+                  changeScreen(const Center(child: MapScreen()));
+                },
               ),
-            ),
-          ],
-        ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            IconButton(
-              icon: Icon(Icons.map),
-              onPressed: () {
-                // Navegar a la primera pantalla
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.navigation),
-              onPressed: () {
-                // Navegar a la segunda pantalla
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.person),
-              onPressed: () {
-                // Navegar a la tercera pantalla
-              },
-            ),
-          ],
+              SizedBox(width: buttonSpacing),
+              IconButton(
+                icon: Icon(Icons.favorite, size: iconSize),
+                onPressed: () {
+                  changeScreen(const Center(child: FavouritesScreen()));
+                },
+              ),
+              SizedBox(width: buttonSpacing),
+              IconButton(
+                icon: Icon(Icons.person, size: iconSize),
+                onPressed: () {
+                  changeScreen(Center(child: ProfileScreen(currentUser: currentUser!,)));
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
 }

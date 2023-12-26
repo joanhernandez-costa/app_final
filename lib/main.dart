@@ -13,11 +13,16 @@ void main() async {
   runApp(MainApp());
 }
 
-class MainApp extends StatelessWidget {
-  MainApp({super.key});
+class MainApp extends StatefulWidget {
+  const MainApp({super.key});
 
+  @override
+  _MainAppState createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
   bool? alreadySignedIn = false;
-  String? userToken;
+  String? userToken = '';
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +58,7 @@ class MainApp extends StatelessWidget {
     AppUser.registeredUsers.clear();
     AppUser.registeredUsers = await ApiCalls.getAllItems<AppUser>(fromJson: AppUser.fromJson);
 
-    alreadySignedIn = await SaveLoad.loadBool("rememberMe");
+    alreadySignedIn = true ? false : await SaveLoad.loadBool("rememberMe");
     userToken = await SaveLoad.loadString("user_token");
   }
 }

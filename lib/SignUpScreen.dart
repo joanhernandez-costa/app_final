@@ -1,15 +1,14 @@
-import 'dart:io';
+
 import 'dart:math';
-import 'package:path/path.dart';
+import 'package:app_final/MediaService.dart';
 import 'package:app_final/ApiCalls.dart';
 import 'package:app_final/HomeScreen.dart';
 import 'package:app_final/Navigation.dart';
 import 'package:app_final/SaveLoad.dart';
 import 'package:app_final/ValidationService.dart';
 import 'package:bcrypt/bcrypt.dart';
-import 'package:app_final/AppUser.dart' as app_user;
+import 'package:app_final/AppUser.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -30,14 +29,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _profileImageUrl;
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    
-    if (pickedFile != null) {
-      String? url = await ApiCalls.uploadFileToStorage(File(pickedFile.path), basename(pickedFile.path));
+    MediaService.pickImage((url) {
       setState(() {
         _profileImageUrl = url;
       });
-    }
+    });
   }
 
   @override
@@ -192,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       String newPassword = _passwordController.text;
       String hashedPass = BCrypt.hashpw(newPassword, BCrypt.gensalt());
 
-      app_user.AppUser newUser = app_user.AppUser.full(
+      AppUser newUser = AppUser.full(
         userName: newUserName, 
         mail: newMail, 
         password: hashedPass, 
@@ -200,15 +196,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       final response = await Supabase.instance.client.auth.signUp(email: newMail, password: newPassword);
-      final String? userToken = response.session?.accessToken;
+      
+      if (response.session != null && response.user != null) {
+        final String? userToken = response.session?.accessToken;
 
-      if (userToken != null) {
-        SaveLoad.saveString("user_token", userToken);
+        newUser.userId = response.user!.id;
+        SaveLoad.saveString("user_token", userToken!);
         ApiCalls.updateUserToken(userToken);
       } 
-      
-      ApiCalls.postItem(newUser, toJson: app_user.AppUser.toJson);
-      SaveLoad.saveGeneric("currentUser", newUser, app_user.AppUser.toJson);
+
+      print('Sesión: ${response.session.toString()}, User: ${response.user.toString()}');
+
+      ApiCalls.postItem(newUser, toJson: AppUser.toJson);
+      SaveLoad.saveGeneric("currentUser", newUser, AppUser.toJson);
       Navigation.replaceScreen(context, HomeScreen());
     }
   }
