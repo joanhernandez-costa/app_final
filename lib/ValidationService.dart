@@ -1,5 +1,5 @@
 
-import 'package:app_final/User.dart';
+import 'package:app_final/AppUser.dart';
 import 'package:bcrypt/bcrypt.dart';
 
 class ValidationService {
@@ -37,14 +37,42 @@ class ValidationService {
     return null;
   }
 
-  static String? validateMail(String? mail) {
+  static String? validateMailForSignIn(String? mail, AppUser? possibleUser) {
     // Verifica que el correo electrónico no esté vacío.
     if (mail == null || mail.isEmpty) {
       return 'El correo electrónico no puede estar vacío';
     }
 
+    // Comprueba si existe una cuenta registrada asociada al correo introducido.
+    if (possibleUser == null || mail != possibleUser.mail) {
+      return 'No hay ninguna cuenta registrada con esta dirección de correo';
+    }
+
     // Expresión regular para verificar formato del correo: "aaaaaa@bbbb.ccc"
-    final RegExp emailRegExp = RegExp(r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+');
+    final RegExp emailRegExp = RegExp(r'^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+\.[a-zA-Z]+$');
+    if (!emailRegExp.hasMatch(mail)) {
+      return 'Introduce una dirección de correo electrónico válida';
+    }
+
+    // No hay errores
+    return null;
+  }
+
+  static String? validateMailForSignUp(String? mail) {
+    // Verifica que el correo electrónico no esté vacío.
+    if (mail == null || mail.isEmpty) {
+      return 'El correo electrónico no puede estar vacío';
+    }
+
+    // Comprueba si el correo electrónico ya está registrado.
+    for (AppUser user in AppUser.registeredUsers) {
+      if (user.mail == mail) {
+        return 'Este correo electrónico ya está registrado';
+      }
+    }
+
+    // Expresión regular para verificar formato del correo: "aaaaaa@bbbb.ccc"
+    final RegExp emailRegExp = RegExp(r'^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+\.[a-zA-Z]+$');
     if (!emailRegExp.hasMatch(mail)) {
       return 'Introduce una dirección de correo electrónico válida';
     }
@@ -61,7 +89,7 @@ class ValidationService {
 
     // Revisa si existe algún usuario con el correo electrónico introducido.
     if (possibleUser == null) {
-      return 'No hay ninguna cuenta registrada con esta dirección de correo';
+      return 'No se reconoce la dirección de correo electrónico';
     }
 
     // Comprueba si la contraseña introducida coincide con la del usuario registrado.

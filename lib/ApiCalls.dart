@@ -1,24 +1,23 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:app_final/SaveLoad.dart';
-import 'package:app_final/User.dart';
+import 'package:path/path.dart';
+import 'package:app_final/AppUser.dart';
 import 'package:http/http.dart' as http;
 import 'package:app_final/Time.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiCalls {
   static const int maxRetries = 3;
   static final String baseUrl = dotenv.env['SUPABASE_URL'] ?? '';
   static String? userToken;
 
-  static Future<String> loadUserToken() async{
-    return await SaveLoad.loadString("user_token");
-  }
-
   static void updateUserToken(String token) {
     userToken = token;
-    print(userToken);
   }
 
+  // Lee todos los registros de una tabla cualquiera, especificar tipo 'T'. (Solo acepta tipos que tengan una tabla en SupaBase).
   static Future<List<T>> getAllItems<T>({int retries = 0, required T Function(Map<String, dynamic>) fromJson}) async {
     String tableUrl = _typeToTableUrl[T] ?? '';
     Uri uri = Uri.parse('$baseUrl/$tableUrl?select=*');
@@ -49,6 +48,7 @@ class ApiCalls {
     }
   }
 
+  // Busca registros con una dirección de correo electrónico.
   static Future<AppUser?> getUserWithMail(String mail) async {
     Uri uri = Uri.parse('$baseUrl/rest/v1/users?select=*&mail=eq.$mail');
     final headers = {
@@ -64,6 +64,7 @@ class ApiCalls {
 
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
+        print('Respuesta: ${response.body}');
         if (data.isNotEmpty) {
           return AppUser.fromJson(data[0]);
         }
@@ -76,6 +77,7 @@ class ApiCalls {
     }
   }
 
+  // Inserta un registro en una tabla cualquiera. Especificar tipo 'T'. (Solo acepta tipos que tengan una tabla en SupaBase)
   static Future<void> postItem<T>(T item, {int retries = 0, required Map<String, dynamic> Function(T) toJson}) async {
     String tableUrl = _typeToTableUrl[T] ?? '';
     Uri uri = Uri.parse('$baseUrl$tableUrl');
@@ -103,6 +105,24 @@ class ApiCalls {
     }
   }
 
+  // Método para subir archivos a Supabase Storage
+  static Future<String?> uploadFileToStorage(File file, String path) async {
+    String fileName = basename(path);
+    final storageResponse = await Supabase.instance.client.storage
+        .from('app_final_bucket')
+        .upload(fileName, file);
+    if (storageResponse.isNotEmpty) {
+      // Retorna la URL pública del archivo subido
+      return Supabase.instance.client.storage
+          .from('app_final_bucket')
+          .getPublicUrl(path);
+    } else {
+      print('Error al subir archivo: $storageResponse');
+      return null;
+    }
+  }
+
+  // Reintento de conexión Post a tabla genérica.
   static void retryPostingItem<T>(T item, Map<String, dynamic> Function(T) toJson, int retries) async {
     if (retries < maxRetries) {
       print('Reintento ${retries + 1} de $maxRetries...');
@@ -113,6 +133,7 @@ class ApiCalls {
     }
   }
 
+  // Reintento de conexión Get a tabla genérica.
   static Future<List<T>> retryGettingItems<T>(int retries, T Function(Map<String, dynamic>) fromJson) async {
     if (retries < maxRetries) {
       print('Reintento ${retries + 1} de $maxRetries...');
@@ -125,8 +146,9 @@ class ApiCalls {
     }
   }
 
+  // Mapea: tipo 'T' => URL de la tabla que almacena T en la base de datos.
   static const Map<Type, String> _typeToTableUrl = {
-    AppUser: 'rest/v1/users',
+    AppUser: '/rest/v1/users',
     
   };
 }

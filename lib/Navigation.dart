@@ -20,11 +20,6 @@ class Navigation {
     );
   }
 
-  // Inicia la navegación a una pantalla según su ruta
-  static void navigateTo(String routeName, BuildContext context, {Object? arguments}) {
-    Navigator.pushNamed(context, routeName, arguments: arguments);
-  }
-
   // Quita la pantalla actual e inicia la navegación a una nueva pantalla según su ruta
   static void replaceWithNamed(String routeName, BuildContext context, {Object? arguments}) {
     Navigator.pushReplacementNamed(context, routeName, arguments: arguments);

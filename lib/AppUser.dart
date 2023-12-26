@@ -1,8 +1,11 @@
 
+import 'dart:io';
+
 class AppUser {
   String? userName;
   String? mail;
   String? password;
+  String? profileImage;
 
   AppUser(){}
 
@@ -10,6 +13,7 @@ class AppUser {
     required this.userName,
     required this.mail,
     required this.password,
+    this.profileImage,
   });
 
   AppUser.singingIn({
@@ -24,6 +28,7 @@ class AppUser {
       'userName': user.userName,
       'mail': user.mail,
       'password': user.password,
+      'profile_image_path': user.profileImage,
     };
   }
   
@@ -32,6 +37,7 @@ class AppUser {
       userName: json['userName'] as String,
       mail: json['mail'] as String,
       password: json['password'] as String,
+      profileImage: json['profile_image_path'] as String?,
     );
   }
 }

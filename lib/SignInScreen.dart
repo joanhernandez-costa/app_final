@@ -1,13 +1,13 @@
+
 import 'package:app_final/ApiCalls.dart';
 import 'package:app_final/Navigation.dart';
 import 'package:app_final/SaveLoad.dart';
-import 'package:app_final/User.dart';
+import 'package:app_final/AppUser.dart';
 import 'package:app_final/ValidationService.dart';
 import 'package:flutter/material.dart';
 import 'package:app_final/SignUpScreen.dart';
 import 'package:app_final/HomeScreen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bcrypt/bcrypt.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -17,7 +17,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  late AppUser? currentUser;
+  AppUser? lastUser;
   AppUser? newUser;
 
   bool _rememberMe = false;
@@ -32,14 +32,13 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _loadCredentials() async {
-    _rememberMe = await SaveLoad.loadBool("rememberMe");
+    // Autocompleta el inicio de sesión si en la sesión anterior el usuario ha marcado la casilla "Recuérdame".
+    _rememberMe = await SaveLoad.loadBool("rememberMe");    
     if (_rememberMe) {
-      currentUser = await SaveLoad.loadGeneric<AppUser>("currentUser", AppUser.fromJson);
-
-      if (currentUser != null) {
+      lastUser = await SaveLoad.loadGeneric<AppUser>("currentUser", AppUser.fromJson);
+      if (lastUser != null) {
         setState(() {
-          _mailController.text = currentUser!.mail ?? 'mail';
-          _passwordController.text = currentUser!.password ?? 'password';
+          _mailController.text = lastUser!.mail ?? 'mail';
         });
       }
     }
@@ -62,11 +61,11 @@ class _SignInScreenState extends State<SignInScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Image.network(
-                'https://us.123rf.com/450wm/nuwaba/nuwaba1707/nuwaba170700076/81763793-persona-usuario-icono-de-ilustraci%C3%B3n-de-amigo-vectror-aislado-sobre-fondo-gris.jpg',
-                width: 100.0,
-                height: 100.0,
-              ),
-              const SizedBox(height: 40.0),
+                lastUser == null || lastUser!.profileImage == null || lastUser!.profileImage!.isEmpty
+                    ? 'https://us.123rf.com/450wm/nuwaba/nuwaba1707/nuwaba170700076/81763793-persona-usuario-icono-de-ilustraci%C3%B3n-de-amigo-vectror-aislado-sobre-fondo-gris.jpg'
+                    : lastUser!.profileImage!,
+                height: 200,
+              ),const SizedBox(height: 40.0),
               TextFormField(
                 controller: _mailController,
                 decoration: const InputDecoration(
@@ -74,7 +73,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => ValidationService.validateMail(_mailController.text),
+                validator: (value) => ValidationService.validateMailForSignIn(_mailController.text, newUser),
               ),
               const SizedBox(height: 10.0),
               TextFormField(
@@ -133,37 +132,37 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void signIn() async {
-    if (_signInFormKey.currentState!.validate()) {
-      String mail = _mailController.text;
-      String password = _passwordController.text;
+    // Credenciales del usuario.
+    String mail = _mailController.text;
+    String password = _passwordController.text;
 
-      // Busca un usuario registrado con el correo introducido
-      AppUser? newUser = await ApiCalls.getUserWithMail(mail);
-    
-      // Intenta iniciar sesión con Supabase
+    // Busca un usuario registrado con el correo introducido.
+    for (int i = 0; i < AppUser.registeredUsers.length; i++ ) {
+      if (AppUser.registeredUsers[i].mail == mail) {
+        newUser = AppUser.registeredUsers[i];
+      }
+    }
+
+    if (_signInFormKey.currentState!.validate()) {
+      // Intenta iniciar sesión con Supabase.
       final AuthResponse response = await Supabase.instance.client.auth.signInWithPassword(email: mail, password: password);
       
       if (response.session?.accessToken == null) {
         print('Error al iniciar sesión');
       } else {
-        // Si el inicio de sesión es exitoso
+        // Si el inicio de sesión es exitoso, se guarda el token de acceso personal del usuario.
         final String? userToken = response.session?.accessToken;
-
-        if (userToken != null) {
-          SaveLoad.saveString("user_token", userToken);
-          ApiCalls.updateUserToken(userToken);
-        }
+        SaveLoad.saveString("user_token", userToken!);
+        ApiCalls.updateUserToken(userToken);
 
         if (newUser != null) {
-          currentUser = newUser;
-          SaveLoad.saveGeneric<AppUser>("currentUser", newUser, AppUser.toJson);
+          // Se guarda el nuevo usuario en preferncias.
+          SaveLoad.saveGeneric<AppUser>("currentUser", newUser!, AppUser.toJson);
         }
+        // Guarda el estado del checkBox "Recuérdame".
+        SaveLoad.saveBool("rememberMe", _rememberMe);
 
-        if (_rememberMe) {        
-          // Guarda el usuario actual si se ha marcado "Recuérdame"    
-          SaveLoad.saveBool("rememberMe", _rememberMe);
-        }
-
+        // Inicia la navegación.
         Navigation.replaceScreen(context, const HomeScreen());
       }
     }
