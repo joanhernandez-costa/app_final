@@ -1,8 +1,7 @@
 
-import 'package:app_final/ApiCalls.dart';
+
 import 'package:app_final/Navigation.dart';
 import 'package:app_final/SaveLoad.dart';
-import 'package:app_final/AppUser.dart';
 import 'package:app_final/ValidationService.dart';
 import 'package:flutter/material.dart';
 import 'package:app_final/SignUpScreen.dart';
@@ -17,33 +16,10 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  AppUser? lastUser;
-  AppUser? newUser;
-
   bool _rememberMe = false;
 
   final TextEditingController _mailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCredentials();
-  }
-
-  Future<void> _loadCredentials() async {
-    // Autocompleta el inicio de sesión si en la sesión anterior el usuario ha marcado la casilla "Recuérdame".
-    _rememberMe = await SaveLoad.loadBool("rememberMe");    
-    if (_rememberMe) {
-      lastUser = await SaveLoad.loadGeneric<AppUser>("currentUser", AppUser.fromJson);
-      if (lastUser != null) {
-        setState(() {
-          _mailController.text = lastUser!.mail ?? 'mail';
-        });
-      }
-    }
-  }
-
   final GlobalKey<FormState> _signInFormKey = GlobalKey<FormState>();
 
   @override
@@ -60,15 +36,9 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              lastUser == null || lastUser!.profileImage == null || lastUser!.profileImage!.isEmpty ?
-                const CircleAvatar(
-                  child: Icon(Icons.person),
-                  radius: 60,
-                ) :
-                Image.network(
-                  lastUser!.profileImage!,
-                  height: 200,
-                ),
+              Image.network('https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/public/app_final_bucket/perfil.jpg',
+                height: 100,
+              ),
               const SizedBox(height: 40.0),
               TextFormField(
                 controller: _mailController,
@@ -77,7 +47,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => ValidationService.validateMailForSignIn(_mailController.text, newUser),
+                validator: (value) => ValidationService.validateMailForSignIn(_mailController.text),
               ),
               const SizedBox(height: 10.0),
               TextFormField(
@@ -87,9 +57,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
-                validator: (value) => ValidationService.validatePasswordForSignIn(_passwordController.text, newUser),
+                validator: (value) => ValidationService.validatePasswordForSignIn(_passwordController.text),
               ),
-              const SizedBox(height: 10.0),
+              const SizedBox(height: 10.0,),
               Row(
                 children: [
                   Checkbox(
@@ -136,38 +106,28 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void signIn() async {
-    // Credenciales del usuario.
-    String mail = _mailController.text;
-    String password = _passwordController.text;
-
-    // Busca un usuario registrado con el correo introducido.
-    for (int i = 0; i < AppUser.registeredUsers.length; i++ ) {
-      if (AppUser.registeredUsers[i].mail == mail) {
-        newUser = AppUser.registeredUsers[i];
-      }
-    }
-
+    // Verifica si el formulario es válido
     if (_signInFormKey.currentState!.validate()) {
-      // Intenta iniciar sesión con Supabase.
-      final AuthResponse response = await Supabase.instance.client.auth.signInWithPassword(email: mail, password: password);
+      // Obtiene las credenciales del usuario
+      String email = _mailController.text;
+      String password = _passwordController.text;
+
+      // Intenta iniciar sesión con Supabase
+      final response = await Supabase.instance.client.auth.signInWithPassword(email: email, password: password);
       
-      if (response.session?.accessToken == null) {
-        print('Error al iniciar sesión');
-      } else {
-        // Si el inicio de sesión es exitoso, se guarda el token de acceso personal del usuario.
-        final String? userToken = response.session?.accessToken;
-        SaveLoad.saveString("user_token", userToken!);
-        ApiCalls.updateUserToken(userToken);
-
-        if (newUser != null) {
-          // Se guarda el nuevo usuario en preferncias.
-          SaveLoad.saveGeneric<AppUser>("currentUser", newUser!, AppUser.toJson);
+      // Comprueba si el inicio de sesión fue exitoso
+      if (response.session != null) {
+        await SaveLoad.saveBool('rememberMe', _rememberMe);
+        // Verifica si el widget todavía está montado antes de navegar
+        if (mounted) {
+          Navigation.replaceScreen(context, const HomeScreen());
         }
-        // Guarda el estado del checkBox "Recuérdame".
-        SaveLoad.saveBool("rememberMe", _rememberMe);
-
-        // Inicia la navegación.
-        Navigation.replaceScreen(context, const HomeScreen());
+      } else {
+        // Si el inicio de sesión no es exitoso, se muestra la pantalla de error.
+        print('Respuesta: ${response.toString()}');
+        if (mounted) {
+          Navigation.replaceScreen(context, ErrorScreen());
+        }
       }
     }
   }

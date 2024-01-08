@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
-class Time {
+class TimeService {
   
   static Future<void> waitForSeconds(int seconds) async {
     await Future.delayed(Duration(seconds: seconds));

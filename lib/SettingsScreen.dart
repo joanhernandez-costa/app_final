@@ -13,7 +13,7 @@ class SettingsScreen extends StatelessWidget {
         leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.pop(context);
+          Navigation.replaceScreen(context, const ProfileScreen());
         },
       ),
       ),

@@ -1,25 +1,19 @@
-import 'package:app_final/ApiCalls.dart';
+
 import 'package:app_final/AppUser.dart';
 import 'package:app_final/MediaService.dart';
 import 'package:app_final/Navigation.dart';
 import 'package:app_final/SettingsScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final AppUser currentUser;
-  // Agregar otras propiedades
-
-  const ProfileScreen({
-    Key? key,
-    required this.currentUser,
-  }) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,24 +38,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Stack(
                       alignment: Alignment.bottomRight,
                       children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundImage: widget.currentUser.profileImage != null && widget.currentUser.profileImage!.isNotEmpty
-                              ? NetworkImage(widget.currentUser.profileImage!)
-                              : null, // Usa null aquí para el caso por defecto
-                          child: widget.currentUser.profileImage == null || widget.currentUser.profileImage!.isEmpty
-                              ? const Icon(Icons.person, size: 60) // Icono por defecto
-                              : null,
+                        ValueListenableBuilder<AppUser?>(
+                          valueListenable: AppUser.currentUser,
+                          builder: (context, currentUser, child) {
+                            return CircleAvatar(
+                              radius: 60,
+                              backgroundImage: NetworkImage(AppUser.currentUser.value!.profileImageUrl!),
+                            );
+                          },
                         ),
                         IconButton(
-                          icon: Icon(Icons.edit),
-                          onPressed: () {
-                            MediaService.pickImage((url) => onImageSelected(url));
-                          },
+                          icon: const Icon(Icons.edit),
+                          onPressed: pickAndUploadImage,
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Expanded(
                       child: Container(
                         color: Colors.white,
@@ -86,15 +78,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void onImageSelected(String? url) {
-    if (url != null) {
-      // Actualiza el objeto currentUser con la nueva imagen
-      setState(() {
-        widget.currentUser.profileImage = url;
-      });
+  void pickAndUploadImage() async {
+    await MediaService.pickImage((url) async {
+      if (url != null) {
+        setState(() {
+          AppUser.currentUser.value?.profileImageUrl = url;
+        });
 
-      // Actualiza el registro en Supabase
-      ApiCalls.updateProfile(widget.currentUser);
-    }
+        // Actualizar el registro en Supabase
+        AppUser.updateCurrentUser(AppUser.currentUser.value!, AppUser.currentUser.value!.id);
+      }
+    });
   }
 }

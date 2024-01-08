@@ -4,7 +4,6 @@ import 'package:app_final/MediaService.dart';
 import 'package:app_final/ApiCalls.dart';
 import 'package:app_final/HomeScreen.dart';
 import 'package:app_final/Navigation.dart';
-import 'package:app_final/SaveLoad.dart';
 import 'package:app_final/ValidationService.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:app_final/AppUser.dart';
@@ -26,13 +25,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _repeatPasswordController = TextEditingController();
   bool _obscureText = true;
 
-  String? _profileImageUrl;
+  String _profileImageUrl = 'https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/public/app_final_bucket/perfil.jpg';
 
   Future<void> _pickImage() async {
     MediaService.pickImage((url) {
-      setState(() {
+      if (url != null) {
+        setState(() {
         _profileImageUrl = url;
-      });
+        });
+      }
     });
   }
 
@@ -56,19 +57,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     alignment: Alignment.bottomLeft,
                     children: [
                       Image.network(
-                        _profileImageUrl == null
-                            ? 'https://us.123rf.com/450wm/nuwaba/nuwaba1707/nuwaba170700076/81763793-persona-usuario-icono-de-ilustraci%C3%B3n-de-amigo-vectror-aislado-sobre-fondo-gris.jpg'
-                            : _profileImageUrl!,
-                        height: 200,
+                        _profileImageUrl,
+                        height: 100,
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(left: 10, bottom: 10), // Personaliza estos márgenes como desees
+                        padding: const EdgeInsets.only(left: 10, bottom: 10),
                         child: GestureDetector(
                           onTap: _pickImage,
                           child: const Icon(
                             Icons.edit, 
                             size: 24, 
-                            color: Colors.white, 
+                            color: Colors.black, 
                           ),
                         ),
                       ),
@@ -100,7 +99,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) => ValidationService.validatePasswordForSignUp(_passwordController.text, _repeatPasswordController.text),
-                    obscureText: _obscureText, // Usa la variable para controlar la visibilidad
+                    obscureText: _obscureText, 
                   ),
                   const SizedBox(height: 20.0),
                   TextFormField(
@@ -110,7 +109,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          // Cambia el ícono basado en la visibilidad de la contraseña
                           _obscureText ? Icons.visibility : Icons.visibility_off,
                         ),
                         onPressed: () {
@@ -188,29 +186,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
       String newPassword = _passwordController.text;
       String hashedPass = BCrypt.hashpw(newPassword, BCrypt.gensalt());
 
-      AppUser newUser = AppUser.full(
-        userName: newUserName, 
-        mail: newMail, 
-        password: hashedPass, 
-        profileImage: _profileImageUrl,
-      );
-
       final response = await Supabase.instance.client.auth.signUp(email: newMail, password: newPassword);
-      
+
       if (response.session != null && response.user != null) {
-        final String? userToken = response.session?.accessToken;
+        AppUser newUser = AppUser(
+          userName: newUserName, 
+          mail: newMail, 
+          password: hashedPass, 
+          id: response.user!.id,
+          profileImageUrl: _profileImageUrl,
+        );
 
-        newUser.userId = response.user!.id;
-        SaveLoad.saveString("user_token", userToken!);
-        ApiCalls.updateUserToken(userToken);
-      } 
-
-      print('Sesión: ${response.session.toString()}, User: ${response.user.toString()}');
-
-      ApiCalls.postItem(newUser, toJson: AppUser.toJson);
-      SaveLoad.saveGeneric("currentUser", newUser, AppUser.toJson);
-      Navigation.replaceScreen(context, HomeScreen());
+        AppUser.currentUser.value = newUser;
+        ApiCalls.postItem(newUser, toJson: AppUser.toJson);
+        if (mounted) {
+          Navigation.replaceScreen(context, const HomeScreen());
+        } 
+      } else {
+        print('Respuesta: ${response.toString()}.');
+        if (mounted) {
+          Navigation.replaceScreen(context, ErrorScreen());
+        }
+      }
     }
   }
-
 }

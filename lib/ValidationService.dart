@@ -1,14 +1,21 @@
 
 import 'package:app_final/AppUser.dart';
 import 'package:bcrypt/bcrypt.dart';
+import 'package:flutter/material.dart';
 
 class ValidationService {
 
   static final minPassLength = 8;
+  static AppUser? possibleUser;
 
-  static String? validateUserName(String userName) {
+  static String? validateUserName(String? userName) {
     const int minLength = 3;
     const int maxLength = 15;
+
+    // Comprobar que no esté vacío
+    if (userName == null || userName.isEmpty) {
+      return 'El nombre de usuario no puede estar vacío';
+    }
 
     // Comprobar si el nombre de usuario se ha registrado anteriormente.
     for (AppUser user in AppUser.registeredUsers) {
@@ -16,12 +23,7 @@ class ValidationService {
         return 'Este nombre de usuario ya existe.';
       }
     }
-
-    // Comprobar que no esté vacío
-    if (userName.isEmpty) {
-      return 'El nombre de usuario no puede estar vacío';
-    }
-
+  
     // Comprobar que no exceda el número de caracteres máximo y que supere el mínimo.
     if (userName.length <= minLength && userName.length >= maxLength) {
       return 'El nombre de usuario debe tener más de $minLength y menos de $maxLength caracteres';
@@ -37,15 +39,22 @@ class ValidationService {
     return null;
   }
 
-  static String? validateMailForSignIn(String? mail, AppUser? possibleUser) {
-    // Verifica que el correo electrónico no esté vacío.
-    if (mail == null || mail.isEmpty) {
-      return 'El correo electrónico no puede estar vacío';
+  static String? validateMailForSignIn(String? mail) {
+    // Busca un usuario registrado con el correo introducido.
+    for (AppUser user in AppUser.registeredUsers) {
+      if (mail == user.mail) {
+        possibleUser = user;
+      }
     }
 
     // Comprueba si existe una cuenta registrada asociada al correo introducido.
-    if (possibleUser == null || mail != possibleUser.mail) {
+    if (possibleUser == null) {
       return 'No hay ninguna cuenta registrada con esta dirección de correo';
+    }
+
+    // Verifica que el correo electrónico no esté vacío.
+    if (mail == null || mail.isEmpty) {
+      return 'El correo electrónico no puede estar vacío';
     }
 
     // Expresión regular para verificar formato del correo: "aaaaaa@bbbb.ccc"
@@ -81,19 +90,19 @@ class ValidationService {
     return null;
   }
 
-  static String? validatePasswordForSignIn(String? password, AppUser? possibleUser) {
-    // Verifica que la contraseña no esté vacía.
-    if (password == null || password.isEmpty) {
-      return 'La contraseña no puede estar vacía';
-    }
-
+  static String? validatePasswordForSignIn(String? password) {
     // Revisa si existe algún usuario con el correo electrónico introducido.
     if (possibleUser == null) {
       return 'No se reconoce la dirección de correo electrónico';
     }
 
+    // Verifica que la contraseña no esté vacía.
+    if (password == null || password.isEmpty) {
+      return 'La contraseña no puede estar vacía';
+    }
+
     // Comprueba si la contraseña introducida coincide con la del usuario registrado.
-    if (!BCrypt.checkpw(password, possibleUser.password!)) {
+    if (!BCrypt.checkpw(password, possibleUser!.password)) {
       return 'La contraseña no es correcta';
     }
 
@@ -129,5 +138,36 @@ class ValidationService {
     }
 
     return null; // No hay errores
+  }
+}
+
+// Este widget se muestra desde SignUpScreen o SignInScreen cuando hay algún error no esperado.
+class ErrorScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.orange,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            "Lo siento, ha habido algún error inesperado.",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white, 
+              shadows: [
+                Shadow( 
+                  offset: const Offset(2.0, 2.0),
+                  blurRadius: 3.0,
+                  color: Colors.black.withOpacity(0.5),
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
   }
 }

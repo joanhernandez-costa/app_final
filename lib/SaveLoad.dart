@@ -29,7 +29,7 @@ class SaveLoad {
     await prefs.setBool(key, value);
   }
 
-  static Future<bool> loadBool(String key) async {
+  static Future<bool?> loadBool(String key) async {
     final SharedPreferences prefs = await _preferences;
     return prefs.getBool(key) ?? false;
   }
@@ -39,7 +39,7 @@ class SaveLoad {
     return prefs.setString(key, value);
   }
 
-  static Future<String> loadString(String key) async {
+  static Future<String?> loadString(String key) async {
     final SharedPreferences prefs = await _preferences;
     return prefs.getString(key) ?? 'false';
   }

@@ -1,4 +1,4 @@
-import 'package:app_final/ApiCalls.dart';
+
 import 'package:app_final/AppUser.dart';
 import 'package:app_final/FavouritesScreen.dart';
 import 'package:app_final/MapScreen.dart';
@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
 
   AppUser? currentUser;
-  Widget screenToShow = const MapScreen();
+  Widget screenToShow = MapScreen();
 
   @override
   void initState() {
@@ -50,9 +50,9 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            currentUser?.profileImage != null
+            currentUser?.profileImageUrl != null
               ? CircleAvatar(
-                  backgroundImage: NetworkImage(currentUser!.profileImage!),
+                  backgroundImage: NetworkImage(currentUser!.profileImageUrl!),
                 )
               : const CircleAvatar(
                   child: Icon(Icons.person),
@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: Icon(Icons.map, size: iconSize),
                 onPressed: () {
-                  changeScreen(const Center(child: MapScreen()));
+                  changeScreen(Center(child: MapScreen()));
                 },
               ),
               SizedBox(width: buttonSpacing),
@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: Icon(Icons.person, size: iconSize),
                 onPressed: () {
-                  changeScreen(Center(child: ProfileScreen(currentUser: currentUser!,)));
+                  changeScreen(const Center(child: ProfileScreen()));
                 },
               ),
             ],
