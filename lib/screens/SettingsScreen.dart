@@ -1,8 +1,8 @@
-import 'package:app_final/ProfileScreen.dart';
-import 'package:app_final/SignInScreen.dart';
+import 'package:app_final/screens/ProfileScreen.dart';
+import 'package:app_final/screens/SignInScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:app_final/Navigation.dart';
+import 'package:app_final/services/Navigation.dart';
 
 class SettingsScreen extends StatelessWidget {
   @override
@@ -13,7 +13,7 @@ class SettingsScreen extends StatelessWidget {
         leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          Navigation.replaceScreen(context, const ProfileScreen());
+          NavigationService.replaceScreen(context, const ProfileScreen());
         },
       ),
       ),
@@ -27,7 +27,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _confirmSignOut(BuildContext context) async {
-    bool confirm = await Navigation.confirmExit(context, '¿Estás seguro de que quieres cerrar sesión?');
+    bool confirm = await NavigationService.confirmExit(context, '¿Estás seguro de que quieres cerrar sesión?');
     if (confirm) {
       await _signOut(context);
     }
@@ -35,6 +35,6 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _signOut(BuildContext context) async {
     await Supabase.instance.client.auth.signOut();
-    Navigation.clearStackAndShowScreen(context, SignInScreen());
+    NavigationService.clearStackAndShowScreen(context, SignInScreen());
   }
 }

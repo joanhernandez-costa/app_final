@@ -1,8 +1,8 @@
 
-import 'package:app_final/AppUser.dart';
-import 'package:app_final/MediaService.dart';
-import 'package:app_final/Navigation.dart';
-import 'package:app_final/SettingsScreen.dart';
+import 'package:app_final/models/AppUser.dart';
+import 'package:app_final/services/MediaService.dart';
+import 'package:app_final/services/Navigation.dart';
+import 'package:app_final/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -26,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: IconButton(
                 icon: Icon(Icons.settings),
                 onPressed: () {
-                  Navigation.replaceScreen(context, SettingsScreen());
+                  NavigationService.replaceScreen(context, SettingsScreen());
                 },
               ),
             ),
@@ -86,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         // Actualizar el registro en Supabase
-        AppUser.updateCurrentUser(AppUser.currentUser.value!, AppUser.currentUser.value!.id);
+        AppUser.updateCurrentUser(AppUser.currentUser.value!);
       }
     });
   }

@@ -1,12 +1,13 @@
 
 import 'dart:math';
-import 'package:app_final/MediaService.dart';
-import 'package:app_final/ApiCalls.dart';
-import 'package:app_final/HomeScreen.dart';
-import 'package:app_final/Navigation.dart';
-import 'package:app_final/ValidationService.dart';
+import 'package:app_final/screens/ErrorScreen.dart';
+import 'package:app_final/services/MediaService.dart';
+import 'package:app_final/services/ApiCalls.dart';
+import 'package:app_final/screens/HomeScreen.dart';
+import 'package:app_final/services/NavigationService.dart';
+import 'package:app_final/services/ValidationService.dart';
 import 'package:bcrypt/bcrypt.dart';
-import 'package:app_final/AppUser.dart';
+import 'package:app_final/models/AppUser.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -174,7 +175,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     // Mezcla los caracteres
     List<String> charsList = pswd.split('');
     charsList.shuffle();
-    print(charsList.join(''));
     return charsList.join('');
   }
 
@@ -198,14 +198,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
 
         AppUser.currentUser.value = newUser;
-        ApiCalls.postItem(newUser, toJson: AppUser.toJson);
+        ApiService.postItem(newUser, toJson: AppUser.toJson);
         if (mounted) {
-          Navigation.replaceScreen(context, const HomeScreen());
+          NavigationService.replaceScreen(context, const HomeScreen());
         } 
       } else {
-        print('Respuesta: ${response.toString()}.');
+        print('Respuesta: $response.');
         if (mounted) {
-          Navigation.replaceScreen(context, ErrorScreen());
+          NavigationService.replaceScreen(context, ErrorScreen());
         }
       }
     }

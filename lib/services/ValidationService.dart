@@ -1,7 +1,6 @@
 
 import 'package:app_final/AppUser.dart';
 import 'package:bcrypt/bcrypt.dart';
-import 'package:flutter/material.dart';
 
 class ValidationService {
 
@@ -93,7 +92,7 @@ class ValidationService {
   static String? validatePasswordForSignIn(String? password) {
     // Revisa si existe algún usuario con el correo electrónico introducido.
     if (possibleUser == null) {
-      return 'No se reconoce la dirección de correo electrónico';
+      return 'No se reconoce la contraseña';
     }
 
     // Verifica que la contraseña no esté vacía.
@@ -104,12 +103,6 @@ class ValidationService {
     // Comprueba si la contraseña introducida coincide con la del usuario registrado.
     if (!BCrypt.checkpw(password, possibleUser!.password)) {
       return 'La contraseña no es correcta';
-    }
-
-    // Expresión regular para detectar números
-    final RegExp numberRegExp = RegExp(r'\d'); 
-    if (!numberRegExp.hasMatch(password)) {
-      return 'La contraseña debe contener al menos un número';
     }
 
     return null; // No hay errores
@@ -137,37 +130,12 @@ class ValidationService {
       return 'La contraseña debe contener al menos un número';
     }
 
-    return null; // No hay errores
-  }
-}
+    // Expresión regular para detectar letras mayúsculas
+    final RegExp upperCaseRegExp = RegExp(r'[A-Z]');
+    if (!upperCaseRegExp.hasMatch(password)) {
+      return 'La contraseña debe contener al menos una letra mayúscula';
+    }
 
-// Este widget se muestra desde SignUpScreen o SignInScreen cuando hay algún error no esperado.
-class ErrorScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.orange,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Text(
-            "Lo siento, ha habido algún error inesperado.",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white, 
-              shadows: [
-                Shadow( 
-                  offset: const Offset(2.0, 2.0),
-                  blurRadius: 3.0,
-                  color: Colors.black.withOpacity(0.5),
-                ),
-              ],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
+    return null; // No hay errores
   }
 }

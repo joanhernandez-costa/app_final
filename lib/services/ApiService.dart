@@ -1,11 +1,10 @@
 import 'dart:convert';
-import 'package:app_final/AppUser.dart';
+import 'package:app_final/models/AppUser.dart';
 import 'package:http/http.dart' as http;
-import 'package:app_final/Time.dart';
+import 'package:app_final/services/TimeService.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
-class ApiCalls {
+class ApiService {
   static const int maxRetries = 3;
   static final String baseUrl = dotenv.env['SUPABASE_URL'] ?? '';
   static String? userToken;

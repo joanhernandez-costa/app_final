@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Navigation {
+class NavigationService {
   // Quita la pantalla actual y la sustituye por newScreen.
   static void replaceScreen(BuildContext context, Widget newScreen) {
     removeScreen(context);

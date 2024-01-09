@@ -1,11 +1,12 @@
 
 
-import 'package:app_final/Navigation.dart';
-import 'package:app_final/SaveLoad.dart';
-import 'package:app_final/ValidationService.dart';
+import 'package:app_final/screens/ErrorScreen.dart';
+import 'package:app_final/services/Navigation.dart';
+import 'package:app_final/services/SaveLoad.dart';
+import 'package:app_final/services/ValidationService.dart';
 import 'package:flutter/material.dart';
-import 'package:app_final/SignUpScreen.dart';
-import 'package:app_final/HomeScreen.dart';
+import 'package:app_final/screens/SignUpScreen.dart';
+import 'package:app_final/screens/HomeScreen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -79,7 +80,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigation.replaceScreen(context, const SignUpScreen());
+                      NavigationService.replaceScreen(context, const SignUpScreen());
                     },
                     child: const Text(
                       "No estoy registrado",
@@ -120,13 +121,13 @@ class _SignInScreenState extends State<SignInScreen> {
         await SaveLoad.saveBool('rememberMe', _rememberMe);
         // Verifica si el widget todavía está montado antes de navegar
         if (mounted) {
-          Navigation.replaceScreen(context, const HomeScreen());
+          NavigationService.replaceScreen(context, const HomeScreen());
         }
       } else {
         // Si el inicio de sesión no es exitoso, se muestra la pantalla de error.
         print('Respuesta: ${response.toString()}');
         if (mounted) {
-          Navigation.replaceScreen(context, ErrorScreen());
+          NavigationService.replaceScreen(context, ErrorScreen());
         }
       }
     }
