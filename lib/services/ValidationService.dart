@@ -1,5 +1,5 @@
 
-import 'package:app_final/AppUser.dart';
+import 'package:app_final/models/AppUser.dart';
 import 'package:bcrypt/bcrypt.dart';
 
 class ValidationService {

@@ -1,5 +1,5 @@
-import 'package:app_final/services/ApiCalls.dart';
-import 'package:app_final/services/SaveLoad.dart';
+import 'package:app_final/services/ApiService.dart';
+import 'package:app_final/services/StorageService.dart';
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,7 +28,6 @@ class AppUser {
 
   static Future<void> initSupabaseListeners() async {
     final supabaseClient = Supabase.instance.client;
-    currentUser.value = await SaveLoad.loadGeneric('lastUser', fromJson);
 
     supabaseClient.auth.onAuthStateChange.listen((data) async {
       if (data.session != null) {
@@ -61,7 +60,7 @@ class AppUser {
   }
 
   static Future<void> handleSignOut() async {
-    await SaveLoad.saveGeneric('lastUser', currentUser.value!, toJson);
+    await StorageService.saveGeneric('lastUser', currentUser.value!, toJson);
     currentUser.value = null;
     ApiService.userToken = null;
   }

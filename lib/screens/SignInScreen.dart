@@ -1,8 +1,8 @@
 
 
 import 'package:app_final/screens/ErrorScreen.dart';
-import 'package:app_final/services/Navigation.dart';
-import 'package:app_final/services/SaveLoad.dart';
+import 'package:app_final/services/NavigationService.dart';
+import 'package:app_final/services/StorageService.dart';
 import 'package:app_final/services/ValidationService.dart';
 import 'package:flutter/material.dart';
 import 'package:app_final/screens/SignUpScreen.dart';
@@ -36,8 +36,8 @@ class _SignInScreenState extends State<SignInScreen> {
           key: _signInFormKey,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Image.network('https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/public/app_final_bucket/perfil.jpg',
+            children: <Widget>[ 
+              Image.network('https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/public/app_final_bucket/logo_app.png',
                 height: 100,
               ),
               const SizedBox(height: 40.0),
@@ -118,7 +118,7 @@ class _SignInScreenState extends State<SignInScreen> {
       
       // Comprueba si el inicio de sesión fue exitoso
       if (response.session != null) {
-        await SaveLoad.saveBool('rememberMe', _rememberMe);
+        await StorageService.saveBool('rememberMe', _rememberMe);
         // Verifica si el widget todavía está montado antes de navegar
         if (mounted) {
           NavigationService.replaceScreen(context, const HomeScreen());

@@ -2,7 +2,7 @@
 import 'dart:math';
 import 'package:app_final/screens/ErrorScreen.dart';
 import 'package:app_final/services/MediaService.dart';
-import 'package:app_final/services/ApiCalls.dart';
+import 'package:app_final/services/ApiService.dart';
 import 'package:app_final/screens/HomeScreen.dart';
 import 'package:app_final/services/NavigationService.dart';
 import 'package:app_final/services/ValidationService.dart';
@@ -26,15 +26,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _repeatPasswordController = TextEditingController();
   bool _obscureText = true;
 
-  String _profileImageUrl = 'https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/public/app_final_bucket/perfil.jpg';
+  String _profileImageUrl = 'https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/public/app_final_bucket/logo_app.png';
 
   Future<void> _pickImage() async {
-    MediaService.pickImage((url) {
-      if (url != null) {
-        setState(() {
-        _profileImageUrl = url;
-        });
-      }
+    var url = await MediaService.pickImage() ?? _profileImageUrl;
+    setState(() {
+      _profileImageUrl = url;
     });
   }
 
@@ -188,7 +185,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       final response = await Supabase.instance.client.auth.signUp(email: newMail, password: newPassword);
 
-      if (response.session != null && response.user != null) {
+      if (response.user != null) {
         AppUser newUser = AppUser(
           userName: newUserName, 
           mail: newMail, 
@@ -203,7 +200,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           NavigationService.replaceScreen(context, const HomeScreen());
         } 
       } else {
-        print('Respuesta: $response.');
+        print('Sesión: ${response.session.toString()}, Usuario: ${response.user.toString()}.');
         if (mounted) {
           NavigationService.replaceScreen(context, ErrorScreen());
         }

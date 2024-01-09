@@ -1,9 +1,10 @@
 
-import 'package:app_final/HomeScreen.dart';
-import 'package:app_final/SaveLoad.dart';
-import 'package:app_final/SignUpScreen.dart';
-import 'package:app_final/AppUser.dart';
-import 'package:app_final/SignInScreen.dart';
+import 'package:app_final/screens/HomeScreen.dart';
+import 'package:app_final/services/ApiService.dart';
+import 'package:app_final/services/StorageService.dart';
+import 'package:app_final/screens/SignUpScreen.dart';
+import 'package:app_final/models/AppUser.dart';
+import 'package:app_final/screens/SignInScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,7 +26,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      home: Authentication(),
+      home: const Authentication(),
       routes: {
         '/signIn': (context) => const SignInScreen(),
         '/signUp': (context) => const SignUpScreen(),
@@ -56,8 +57,10 @@ class AuthenticationState extends State<Authentication> {
   Future<void> initializeApp() async {
     await dotenv.load(fileName: 'supabase_initialize.env');
     await Supabase.initialize(anonKey: dotenv.env['SUPABASE_KEY']!, url: dotenv.env['SUPABASE_URL']!);
+    AppUser.registeredUsers = await ApiService.getAllItems<AppUser>(fromJson: AppUser.fromJson);
+    AppUser.currentUser.value = await StorageService.loadGeneric('lastUser', AppUser.fromJson);
     await AppUser.initSupabaseListeners();
-    remembered = await SaveLoad.loadBool("rememberMe") ?? false;
+    remembered = await StorageService.loadBool("rememberMe") ?? false;
     
     setState(() {
       isLoading = false;

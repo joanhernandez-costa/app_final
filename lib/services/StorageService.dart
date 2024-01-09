@@ -2,7 +2,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-class SaveLoad {
+class StorageService {
   
   static SharedPreferences? _prefs;
   static Future<SharedPreferences> get _preferences async => _prefs ??= await SharedPreferences.getInstance();

@@ -1,35 +1,21 @@
 
-import 'package:app_final/AppUser.dart';
-import 'package:app_final/FavouritesScreen.dart';
-import 'package:app_final/MapScreen.dart';
-import 'package:app_final/ProfileScreen.dart';
-import 'package:app_final/SaveLoad.dart';
+import 'package:app_final/models/AppUser.dart';
+import 'package:app_final/screens/FavouritesScreen.dart';
+import 'package:app_final/screens/MapScreen.dart';
+import 'package:app_final/screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
 
-  AppUser? currentUser;
-  Widget screenToShow = MapScreen();
-
-  @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
-
-  Future<void> loadData() async {
-    AppUser? loadedUser = await SaveLoad.loadGeneric("currentUser", AppUser.fromJson);
-    setState(() {
-      currentUser = loadedUser;
-    });
-  }
+  AppUser? currentUser = AppUser.currentUser.value;
+  Widget screenToShow = const MapScreen();
 
   void changeScreen(Widget newScreen) {
     setState(() {
@@ -59,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
             const SizedBox(width: 10),
             Text(
-              currentUser?.userName ?? '',
+              currentUser?.userName ?? 'userName',
               style: const TextStyle(
                 fontSize: 18,
               ),
@@ -68,9 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         backgroundColor: Colors.orange,
       ),
-      body: currentUser == null
-        ? const CircularProgressIndicator()
-        : screenToShow,
+      body: screenToShow,
       bottomNavigationBar: SizedBox(
         height: screenHeight * 0.1,
         child: BottomAppBar(
@@ -81,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: Icon(Icons.map, size: iconSize),
                 onPressed: () {
-                  changeScreen(Center(child: MapScreen()));
+                  changeScreen(const Center(child: MapScreen()));
                 },
               ),
               SizedBox(width: buttonSpacing),

@@ -2,7 +2,7 @@ import 'package:app_final/screens/ProfileScreen.dart';
 import 'package:app_final/screens/SignInScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:app_final/services/Navigation.dart';
+import 'package:app_final/services/NavigationService.dart';
 
 class SettingsScreen extends StatelessWidget {
   @override
