@@ -1,0 +1,41 @@
+name: app_final
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.1.2
+  shared_preferences: ^2.0.13
+  supabase_flutter: ^2.0.2
+  flutter_dotenv: ^5.0.2
+  bcrypt: ^1.1.3
+  image_picker: ^1.0.5
+  location: ^5.0.3
+  provider: ^6.0.0
+  path: ^1.8.0
+  flutter_svg: ^2.0.10
+  google_maps_flutter: ^2.5.3
+  flutter_rating_bar: ^4.0.0
+  uuid: ^4.3.3
+  flutter_compass: ^0.8.0
+  intl: ^0.19.0
+  url_launcher: ^6.2.5
+  flutter_typeahead: ^5.2.0
+  geolocator: ^11.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  test: ^1.16.0
+
+flutter:
+  uses-material-design: true
+  assets: 
+    - supabase_initialize.env
+    - assets/map_styles/
