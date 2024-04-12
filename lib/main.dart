@@ -36,13 +36,6 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       navigatorKey: NavigationService.navigatorKey,
       home: const Authentication(),
-      routes: {
-        '/signIn': (context) => const SignInScreen(),
-        '/signUp': (context) => const SignUpScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        // Añadir más rutas según las pantallas
-      },
     );
   }
 }
