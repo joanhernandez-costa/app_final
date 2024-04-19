@@ -1,31 +1,29 @@
-
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/models/WeatherData.dart';
 import 'package:app_final/screens/HomeScreen.dart';
-import 'package:app_final/screens/ProfileScreen.dart';
 import 'package:app_final/services/ApiService.dart';
 import 'package:app_final/services/LocationService.dart';
 import 'package:app_final/services/NavigationService.dart';
 import 'package:app_final/services/StorageService.dart';
-import 'package:app_final/screens/SignUpScreen.dart';
 import 'package:app_final/models/AppUser.dart';
 import 'package:app_final/screens/SignInScreen.dart';
 import 'package:app_final/services/UserService.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/date_symbol_data_file.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  runApp(ChangeNotifierProvider.value(
-    value: UserService.currentUser,
-    child: MainApp(),
-  ));
+  initializeDateFormatting('es_ES', 'assets/locale').then((_) {
+    runApp(ChangeNotifierProvider.value(
+      value: UserService.currentUser,
+      child: MainApp(),
+    ));
+  });
 }
 
 class MainApp extends StatelessWidget {
@@ -58,12 +56,16 @@ class AuthenticationState extends State<Authentication> {
 
   Future<void> initializeApp() async {
     await dotenv.load(fileName: 'supabase_initialize.env');
-    await Supabase.initialize(anonKey: dotenv.env['SUPABASE_KEY']!, url: dotenv.env['SUPABASE_URL']!);
+    await Supabase.initialize(
+        anonKey: dotenv.env['SUPABASE_KEY']!, url: dotenv.env['SUPABASE_URL']!);
 
-    UserService.registeredUsers = await ApiService.getAllItems<AppUser>(fromJson: AppUser.fromJson);
-    RestaurantData.allRestaurantsData = await ApiService.getAllItems(fromJson: RestaurantData.fromJson);
+    UserService.registeredUsers =
+        await ApiService.getAllItems<AppUser>(fromJson: AppUser.fromJson);
+    RestaurantData.allRestaurantsData =
+        await ApiService.getAllItems(fromJson: RestaurantData.fromJson);
     Position userPosition = await LocationService.getCurrentLocation();
-    WeatherData.weatherForecasts = await ApiService.getWeather(DateTime.now(), LatLng(userPosition.latitude, userPosition.longitude));
+    WeatherData.weatherForecasts = await ApiService.getWeather(
+        DateTime.now(), LatLng(userPosition.latitude, userPosition.longitude));
 
     await UserService.initSupabaseListeners();
 
@@ -76,7 +78,8 @@ class AuthenticationState extends State<Authentication> {
     if (UserService.currentUser.value != null) {
       // Navegar a HomeScreen si hay una sesión válida.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()));
       });
     } else {
       // Preparar para mostrar SignInScreen.
@@ -85,8 +88,6 @@ class AuthenticationState extends State<Authentication> {
       });
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -105,17 +106,16 @@ class LoadingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.network('https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/sign/logo/logo_recortado.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJsb2dvL2xvZ29fcmVjb3J0YWRvLnBuZyIsImlhdCI6MTcxMTg5NDAzMSwiZXhwIjoxNzQzNDMwMDMxfQ.tf5MpdHsO82hWhY_cb6YWIOVfxklA19lIRDVC4esQlY&t=2024-03-31T14%3A07%3A14.453Z'),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(),
-          ],
-        )
-      ),
+          child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.network(
+              'https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/sign/logo/logo_recortado.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJsb2dvL2xvZ29fcmVjb3J0YWRvLnBuZyIsImlhdCI6MTcxMTg5NDAzMSwiZXhwIjoxNzQzNDMwMDMxfQ.tf5MpdHsO82hWhY_cb6YWIOVfxklA19lIRDVC4esQlY&t=2024-03-31T14%3A07%3A14.453Z'),
+          const SizedBox(height: 20),
+          const CircularProgressIndicator(),
+        ],
+      )),
     );
   }
 }
-
