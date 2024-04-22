@@ -1,9 +1,9 @@
-
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/MapService/MapStyleService.dart';
 import 'package:app_final/services/MapService/ShadowCastService.dart';
 import 'package:app_final/services/MapService/SunPositionService.dart';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapService {
@@ -13,14 +13,15 @@ class MapService {
   ShadowCastService shadowService = ShadowCastService();
 
   LatLngBounds? visibleRegion;
-  Set<Marker> markers = Set<Marker>();
-  Set<Polygon> shadows = Set<Polygon>();
+  Set<Marker> markers = <Marker>{};
+  Set<Polygon> shadows = <Polygon>{};
   List<String> currentSymbolIds = [];
 
   Function(Set<Marker>) onMarkersUpdated;
+  Function(Set<Polygon>) onPolygonsUpdated;
   dynamic Function(RestaurantData)? onMarkerTapped;
 
-  MapService({required this.onMarkersUpdated});
+  MapService({required this.onMarkersUpdated, required this.onPolygonsUpdated});
 
   void setMapController(GoogleMapController controller) {
     mapController = controller;
@@ -29,7 +30,7 @@ class MapService {
   void updateCameraPosition(CameraPosition newCameraPosition) {
     currentCameraPosition = newCameraPosition;
   }
-  
+
   // Mover el mapa a una nueva posición
   void move(LatLng newPosition) {
     mapController?.animateCamera(
@@ -40,7 +41,8 @@ class MapService {
   //Crea un polígono para mostrarlo en el mapa
   Future<void> createPolygonInMap(RestaurantData restaurant) async {
     DateTime localTime = DateTime.now();
-    List<LatLng> shadowPerimeter = await shadowService.projectShadow(restaurant, localTime);
+    List<LatLng> shadowPerimeter =
+        await shadowService.projectShadow(restaurant, localTime);
 
     final String polygonIdVal = 'polygon_${restaurant.data.id}';
     final PolygonId polygonId = PolygonId(polygonIdVal);
@@ -48,47 +50,73 @@ class MapService {
     final Polygon polygon = Polygon(
       polygonId: polygonId,
       points: shadowPerimeter,
-      fillColor: ColorService.background.withOpacity(0.5),
+      fillColor: Colors.red, //ColorService.background,
       strokeColor: ColorService.background,
-      strokeWidth: 1,
+      strokeWidth: 10,
+      zIndex: 1,
+      geodesic: true,
     );
 
     shadows.add(polygon);
+    print('Polígono $polygonIdVal añadido');
   }
 
   // Agregar un marcador de Punto de Interés (POI)
   void addPOIMarker(RestaurantData restaurant) {
-    LatLng restaurantPosition = LatLng(restaurant.data.latitude, restaurant.data.longitude);
-    bool isInSunLight = SunPositionService.isRestaurantInSunLight(restaurantPosition, DateTime.now()); 
+    LatLng restaurantPosition =
+        LatLng(restaurant.data.latitude, restaurant.data.longitude);
+    bool isInSunLight = SunPositionService.isRestaurantInSunLight(
+        restaurantPosition, DateTime.now());
 
-    final String markerIdVal = 'marker_${restaurant.data.latitude}_${restaurant.data.longitude}';
+    final String markerIdVal =
+        'marker_${restaurant.data.latitude}_${restaurant.data.longitude}';
     final MarkerId markerId = MarkerId(markerIdVal);
 
     final Marker marker = Marker(
-      markerId: markerId,
-      position: restaurantPosition,
-      icon: BitmapDescriptor.defaultMarkerWithHue(isInSunLight ? BitmapDescriptor.hueOrange : BitmapDescriptor.hueBlue),
-      onTap: () {
-        if (onMarkerTapped != null) {
-          onMarkerTapped!(restaurant);
-        }
-      }
-    );
+        markerId: markerId,
+        position: restaurantPosition,
+        icon: BitmapDescriptor.defaultMarkerWithHue(isInSunLight
+            ? BitmapDescriptor.hueOrange
+            : BitmapDescriptor.hueBlue),
+        onTap: () {
+          if (onMarkerTapped != null) {
+            onMarkerTapped!(restaurant);
+          }
+        });
 
     markers.add(marker);
-    onMarkersUpdated(markers);
   }
 
   void onCameraIdle() async {
     // Obtiene el zoom del mapa
-    var zoom = await mapController?.getZoomLevel();   
+    var zoom = await mapController?.getZoomLevel();
 
-    if (zoom! > 15) { 
+    if (zoom! > 15) {
       loadMarkers();
+      loadPolygons();
     } else {
       // Eliminar los marcadores si el zoom es demasiado bajo
       removeMarkers();
+      removePolygons();
     }
+  }
+
+  void loadPolygons() async {
+    if (mapController == null) return;
+
+    LatLngBounds visibleRegion = await mapController!.getVisibleRegion();
+    Set<Polygon> newPolygons = {};
+
+    for (var restaurant in RestaurantData.allRestaurantsData) {
+      LatLng restaurantLocation =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      if (visibleRegion.contains(restaurantLocation)) {
+        await createPolygonInMap(restaurant);
+      }
+    }
+
+    shadows = newPolygons;
+    onPolygonsUpdated(shadows);
   }
 
   // Cargar marcadores basados en la posición central del mapa
@@ -99,7 +127,8 @@ class MapService {
     if (visibleRegion == null) return;
 
     for (var restaurant in RestaurantData.allRestaurantsData) {
-      LatLng restaurantLocation = LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      LatLng restaurantLocation =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
 
       if (visibleRegion.contains(restaurantLocation)) {
         addPOIMarker(restaurant);
@@ -107,6 +136,11 @@ class MapService {
     }
 
     onMarkersUpdated(markers);
+  }
+
+  void removePolygons() {
+    shadows.clear();
+    onPolygonsUpdated(shadows);
   }
 
   void removeMarkers() {
@@ -147,13 +181,11 @@ class MapService {
     }
   }
 
-  double getMapRotation()  {
+  double getMapRotation() {
     return currentCameraPosition?.bearing ?? 0;
   }
 
   void setMapStyle(String style) {
     mapController!.setMapStyle(style);
   }
-
 }
-

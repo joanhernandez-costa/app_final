@@ -11,19 +11,21 @@ import 'package:app_final/services/UserService.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:intl/date_symbol_data_file.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/find_locale.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  initializeDateFormatting('es_ES', 'assets/locale').then((_) {
-    runApp(ChangeNotifierProvider.value(
-      value: UserService.currentUser,
-      child: MainApp(),
-    ));
-  });
+  Intl.systemLocale = await findSystemLocale();
+  initializeDateFormatting();
+  runApp(ChangeNotifierProvider.value(
+    value: UserService.currentUser,
+    child: MainApp(),
+  ));
 }
 
 class MainApp extends StatelessWidget {

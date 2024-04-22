@@ -1,4 +1,3 @@
-
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/screens/RestaurantDetailScreen.dart';
 import 'package:app_final/services/MapService/MapService.dart';
@@ -11,9 +10,7 @@ import 'dart:async';
 class CustomMapBuilder extends StatefulWidget {
   final MapService mapService;
 
-  CustomMapBuilder({
-    required this.mapService
-  });
+  CustomMapBuilder({required this.mapService});
 
   @override
   CustomMapBuilderState createState() => CustomMapBuilderState();
@@ -22,6 +19,7 @@ class CustomMapBuilder extends StatefulWidget {
 class CustomMapBuilderState extends State<CustomMapBuilder> {
   Completer<GoogleMapController> controllerCompleter = Completer();
   Set<Marker> currentMarkers = {};
+  Set<Polygon> currentPolygons = {};
   late String styleJson;
 
   @override
@@ -36,16 +34,25 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
     };
 
     widget.mapService.onMarkerTapped = (RestaurantData restaurant) {
-      NavigationService.showScreen(RestaurantDetailScreen(restaurant: restaurant));
+      NavigationService.showScreen(
+          RestaurantDetailScreen(restaurant: restaurant));
     };
-  }  
+
+    widget.mapService.onPolygonsUpdated = (updatedPolygons) {
+      if (!mounted) return;
+      setState(() {
+        currentPolygons = updatedPolygons;
+      });
+    };
+  }
 
   void onMapCreated(GoogleMapController controller) async {
     if (!mounted) return;
 
     controllerCompleter.complete(controller);
     widget.mapService.setMapController(controller);
-    styleJson = await widget.mapService.mapStyle.loadMapStyle(MapStyle.night);
+    styleJson =
+        await widget.mapService.mapStyle.loadMapStyle(MapStyle.standard);
     widget.mapService.setMapStyle(styleJson);
   }
 
@@ -55,18 +62,17 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
       body: GoogleMap(
         onMapCreated: onMapCreated,
         initialCameraPosition: const CameraPosition(
-          target: LatLng(40.416869, -3.703470),
-          zoom: 11.0
-        ),
+            target: LatLng(40.416869, -3.703470), zoom: 11.0),
         zoomControlsEnabled: false,
         markers: currentMarkers,
+        polygons: currentPolygons,
         onCameraMove: (CameraPosition position) {
           widget.mapService.updateCameraPosition(position);
         },
         onCameraIdle: () {
           widget.mapService.onCameraIdle();
         },
-      )
-    );  
+      ),
+    );
   }
 }

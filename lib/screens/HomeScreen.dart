@@ -1,4 +1,3 @@
-
 import 'package:app_final/models/AppUser.dart';
 import 'package:app_final/screens/FavouritesScreen.dart';
 import 'package:app_final/screens/MapScreen.dart';
@@ -19,7 +18,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-
   AppUser? currentUser;
   late MapService mapService;
   int selectedIndex = 0;
@@ -27,8 +25,10 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    mapService = MapService(onMarkersUpdated: (Set<Marker> markers) {});
-    currentUser = UserService.currentUser.value; 
+    mapService = MapService(
+        onMarkersUpdated: (Set<Marker> markers) {},
+        onPolygonsUpdated: (Set<Polygon> shadows) {});
+    currentUser = UserService.currentUser.value;
   }
 
   void onItemTapped(int index) {
@@ -60,12 +60,13 @@ class HomeScreenState extends State<HomeScreen> {
         title: Row(
           children: [
             currentUser?.profileImageUrl != null
-              ? CircleAvatar(
-                  backgroundImage: NetworkImage(currentUser!.profileImageUrl!),
-                )
-              : const CircleAvatar(
-                  child: Icon(Icons.person),
-                ),
+                ? CircleAvatar(
+                    backgroundImage:
+                        NetworkImage(currentUser!.profileImageUrl!),
+                  )
+                : const CircleAvatar(
+                    child: Icon(Icons.person),
+                  ),
             const SizedBox(width: 10),
             Text(
               currentUser?.userName ?? 'userName',
@@ -89,15 +90,15 @@ class HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: ColorService.secondary,
         items: const [
-           BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.map),
-            label: 'Mapa', 
+            label: 'Mapa',
           ),
-           BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Favoritos',
           ),
-           BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Perfil',
           ),

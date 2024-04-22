@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:math';
 import 'package:app_final/models/WeatherData.dart';
@@ -10,6 +9,7 @@ import 'package:app_final/widgets/WeatherBottomSheet.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 
 class MapScreen extends StatefulWidget {
   final MapService mapService;
@@ -83,7 +83,8 @@ class MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     // Calcular ángulo combinando dirección del usuario y la rotación del mapa.
-    double combinedAngle = ((userHeadingDirection ?? 0) - mapRotation - 45) % 360;
+    double combinedAngle =
+        ((userHeadingDirection ?? 0) - mapRotation - 45) % 360;
     double angleInRadians = combinedAngle * (pi / 180);
 
     return Scaffold(
@@ -96,10 +97,46 @@ class MapScreenState extends State<MapScreen> {
             right: 10,
             child: RestaurantSearchWidget(
               onSelected: (restaurant) {
-                widget.mapService.move(LatLng(restaurant.data.latitude, restaurant.data.longitude));
+                widget.mapService.move(LatLng(
+                    restaurant.data.latitude, restaurant.data.longitude));
               },
             ),
           ),
+          if (forecasts != null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 90,
+              left: 10,
+              right: 10,
+              child: Container(
+                height: 120,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: forecasts!.length,
+                  itemBuilder: (context, index) {
+                    final forecast = forecasts![index];
+                    return Container(
+                      width: 150,
+                      child: Card(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Image.network(forecast.getIconUrl(), width: 50),
+                            Text(
+                              DateFormat('EEE, d MMM', 'es_ES')
+                                  .format(forecast.timestamp),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text('${forecast.temperature}°C'),
+                            Text(forecast.weatherDescription),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
           Positioned(
             right: 10,
             bottom: 90,
@@ -135,10 +172,6 @@ class MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
-          if (forecasts != null)
-            Positioned.fill(
-              child: WeatherBottomSheet(weatherForecasts: forecasts!,)
-            ),
         ],
       ),
     );

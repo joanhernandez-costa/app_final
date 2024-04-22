@@ -6,7 +6,8 @@ import 'package:intl/intl.dart';
 class WeatherBottomSheet extends StatelessWidget {
   final List<WeatherData> weatherForecasts;
 
-  const WeatherBottomSheet({Key? key, required this.weatherForecasts}) : super(key: key);
+  const WeatherBottomSheet({Key? key, required this.weatherForecasts})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +25,11 @@ class WeatherBottomSheet extends StatelessWidget {
   }
 
   Widget buildHandler(BuildContext context) {
-    return Center( 
+    return Center(
       child: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Container(
-          width: 40, 
+          width: 40,
           height: 5.0,
           decoration: BoxDecoration(
             color: ColorService.secondary,
@@ -49,9 +50,9 @@ class WeatherBottomSheet extends StatelessWidget {
 
   Widget buildDraggableScrollableSheet() {
     return DraggableScrollableSheet(
-      initialChildSize: 0.1, // Comienza colapsado al 5% de la altura de la pantalla
-      minChildSize: 0.1,
-      maxChildSize: 0.5, // Puede expandirse hasta el 50% de la altura de la pantalla
+      initialChildSize: 0.15,
+      minChildSize: 0.15,
+      maxChildSize: 0.5,
       builder: (BuildContext context, ScrollController scrollController) {
         return Container(
           decoration: const BoxDecoration(
@@ -76,13 +77,16 @@ class WeatherBottomSheet extends StatelessWidget {
                 child: ListView.separated(
                   controller: scrollController,
                   itemCount: weatherForecasts.length,
-                  separatorBuilder: (context, index) => const Divider(color: Colors.grey),
+                  separatorBuilder: (context, index) =>
+                      const Divider(color: Colors.grey),
                   itemBuilder: (BuildContext context, int index) {
                     WeatherData weatherInfo = weatherForecasts[index];
-                    String formattedDate = DateFormat('EEEE, d MMM', 'es_ES').format(weatherInfo.timestamp); 
+                    String formattedDate = DateFormat('EEEE, d MMM', 'es_ES')
+                        .format(weatherInfo.timestamp);
 
                     return ListTile(
-                      leading: Image.network(weatherInfo.getIconUrl(), width: 50),
+                      leading:
+                          Image.network(weatherInfo.getIconUrl(), width: 50),
                       title: Text(formattedDate),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

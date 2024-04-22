@@ -9,6 +9,8 @@ class MapStyleService {
         return 'assets/map_styles/aubergine_mode.json';
       case MapStyle.retro:
         return 'assets/map_styles/retro_mode.json';
+      case MapStyle.standard:
+        return 'assets/map_styles/standard_mode.json';
       default:
         return '';
     }
@@ -23,6 +25,7 @@ enum MapStyle {
   night,
   aubergine,
   retro,
+  standard,
   // MAPA DE DÍA, SOLEADO
   // MAPA DE DÍA, NUBLADO
   // MAPA DE NOCHE
