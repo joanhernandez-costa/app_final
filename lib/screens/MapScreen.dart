@@ -5,7 +5,6 @@ import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/MapService/MapService.dart';
 import 'package:app_final/widgets/CustomMapBuilder.dart';
 import 'package:app_final/widgets/CustomSearchWidget.dart';
-import 'package:app_final/widgets/WeatherBottomSheet.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
