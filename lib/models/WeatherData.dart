@@ -23,15 +23,7 @@ class WeatherData {
 
   static WeatherData fromJson(Map<String, dynamic> json, LatLng location) {
     try {
-      if (json['weather'] == null || json['weather'].isEmpty) {
-        throw const FormatException("La clave 'weather' falta o está vacía.");
-      }
-
       var weatherInfo = json['weather'][0];
-
-      if (json['temp'] == null || json['temp']['day'] == null) {
-        throw const FormatException("La clave 'temp'->'day' falta o es null.");
-      }
 
       return WeatherData(
         timestamp:
@@ -46,7 +38,7 @@ class WeatherData {
         weatherIconId: weatherInfo['icon'],
       );
     } catch (e) {
-      print('Error al procesar JSON en fromJson: $e');
+      print('Error al procesar JSON: $e');
       rethrow;
     }
   }

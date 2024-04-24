@@ -22,6 +22,8 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
   Set<Polygon> currentPolygons = {};
   late String styleJson;
 
+  final LatLng initialPosition = const LatLng(40.416869, -3.703470);
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +36,7 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
     };
 
     widget.mapService.onMarkerTapped = (RestaurantData restaurant) {
+      if (!mounted) return;
       NavigationService.showScreen(
           RestaurantDetailScreen(restaurant: restaurant));
     };
@@ -51,8 +54,7 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
 
     controllerCompleter.complete(controller);
     widget.mapService.setMapController(controller);
-    styleJson =
-        await widget.mapService.mapStyle.loadMapStyle(MapStyle.standard);
+    styleJson = await widget.mapService.mapStyle.loadMapStyle(MapStyle.retro);
     widget.mapService.setMapStyle(styleJson);
   }
 
@@ -62,7 +64,7 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
       body: GoogleMap(
         onMapCreated: onMapCreated,
         initialCameraPosition: const CameraPosition(
-            target: LatLng(40.416869, -3.703470), zoom: 11.0),
+            target: LatLng(40.416869, -3.703470), zoom: 15),
         zoomControlsEnabled: false,
         markers: currentMarkers,
         polygons: currentPolygons,

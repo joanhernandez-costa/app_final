@@ -1,6 +1,4 @@
-
 import 'dart:math';
-import 'package:flutter/services.dart';
 
 class Utils {
   // Convierte de grados a radianes.
@@ -17,11 +15,4 @@ class Utils {
   static double getRandom(double min, double max) {
     return min + Random().nextDouble() * (max - min);
   }
-
-  static Future<Uint8List> loadFileAsUint8List(String assetPathToFile) async {
-    // The path refers to the assets directory as specified in pubspec.yaml.
-    ByteData fileData = await rootBundle.load(assetPathToFile);
-    return Uint8List.view(fileData.buffer);
-  }
-
 }

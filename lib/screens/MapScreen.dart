@@ -101,7 +101,7 @@ class MapScreenState extends State<MapScreen> {
               },
             ),
           ),
-          if (forecasts != null)
+          if (forecasts != null && false)
             Positioned(
               top: MediaQuery.of(context).padding.top + 90,
               left: 10,
