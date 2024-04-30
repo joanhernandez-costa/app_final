@@ -3,14 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:app_final/models/AppTheme.dart';
 
 class ColorService {
-  static AppTheme currentTheme = AppTheme(
-    theme: {
-      "primary": Color.fromRGBO(255, 166, 43, 1),
-      "secondary": Color.fromRGBO(22, 105, 122, 1),
-    },
-    currentStyle: MapStyle.night,
-  );
-
   // Colores primarios
   static const Color primary = Color.fromRGBO(255, 166, 43, 1);
   static Color primaryVariant = changeLightness(primary, 0.5);

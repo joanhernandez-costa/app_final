@@ -7,3 +7,4 @@ Hacer:
 Arreglar:
 
 1. Hora que se muestra en el slider de MapScreen, sunrise y sunset no tienen los valores correctos.
+2. Comprobar si las sombras arrojadas que se calculan son coherentes según el momento del día.
