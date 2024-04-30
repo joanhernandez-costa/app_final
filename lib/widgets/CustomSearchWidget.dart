@@ -1,5 +1,5 @@
 import 'package:app_final/models/RestaurantData.dart';
-import 'package:app_final/services/ColorService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
@@ -35,10 +35,10 @@ class RestaurantSearchWidgetState extends State<RestaurantSearchWidget> {
                 controller: controller,
                 focusNode: focusNode,
                 autofocus: false,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   filled: true,
-                  fillColor: ColorService.textOnPrimary,
-                  border: OutlineInputBorder(
+                  fillColor: ThemeService.currentTheme.textOnPrimary,
+                  border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(40))),
                   labelText: 'Busca establecimientos',
                 ));

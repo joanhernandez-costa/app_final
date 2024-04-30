@@ -1,8 +1,6 @@
-
-
 import 'package:app_final/screens/ErrorScreen.dart';
-import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/NavigationService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:app_final/services/ValidationService.dart';
 import 'package:app_final/widgets/CustomButtons.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +24,11 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ColorService.background,
+      backgroundColor: ThemeService.currentTheme.background,
       appBar: AppBar(
-        title: const Text("Inicio de sesión", style: TextStyle(color: ColorService.textOnPrimary)),
-        backgroundColor: ColorService.secondary,
+        title: Text("Inicio de sesión",
+            style: TextStyle(color: ThemeService.currentTheme.textOnPrimary)),
+        backgroundColor: ThemeService.currentTheme.secondary,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -39,7 +38,9 @@ class _SignInScreenState extends State<SignInScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                const SizedBox(height: 40,),
+                const SizedBox(
+                  height: 40,
+                ),
                 Image.network(
                   'https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/sign/logo/logo_recortado.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJsb2dvL2xvZ29fcmVjb3J0YWRvLnBuZyIsImlhdCI6MTcxMTgxNzM4NCwiZXhwIjoxNzQzMzUzMzg0fQ.l2nZWZtggW15CK6qX88ZS7poZvHNdOrecQsVyBOjsx0&t=2024-03-30T16%3A49%3A47.703Z',
                   height: 175,
@@ -49,7 +50,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 Container(
                   padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
-                    color: ColorService.surface,
+                    color: ThemeService.currentTheme.surface,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -69,7 +70,9 @@ class _SignInScreenState extends State<SignInScreen> {
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.emailAddress,
-                        validator: (value) => ValidationService.validateMailForSignIn(_mailController.text),
+                        validator: (value) =>
+                            ValidationService.validateMailForSignIn(
+                                _mailController.text),
                       ),
                       const SizedBox(height: 10.0),
                       TextFormField(
@@ -79,13 +82,15 @@ class _SignInScreenState extends State<SignInScreen> {
                           border: OutlineInputBorder(),
                         ),
                         obscureText: true,
-                        validator: (value) => ValidationService.validatePasswordForSignIn(_passwordController.text),
+                        validator: (value) =>
+                            ValidationService.validatePasswordForSignIn(
+                                _passwordController.text),
                       ),
                       const SizedBox(height: 10.0),
                       Row(
                         children: [
                           Checkbox(
-                            activeColor: ColorService.primary,
+                            activeColor: ThemeService.currentTheme.primary,
                             value: _rememberMe,
                             onChanged: (bool? value) {
                               setState(() {
@@ -93,7 +98,10 @@ class _SignInScreenState extends State<SignInScreen> {
                               });
                             },
                           ),
-                          const Text("Recuérdame", style: TextStyle(color: ColorService.textOnPrimary)),
+                          Text("Recuérdame",
+                              style: TextStyle(
+                                  color:
+                                      ThemeService.currentTheme.textOnPrimary)),
                         ],
                       ),
                       const SizedBox(height: 20.0),
@@ -101,13 +109,16 @@ class _SignInScreenState extends State<SignInScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: SecondaryButton().createButton(const Text('No estoy registrado'), () {
-                              NavigationService.replaceScreen(const SignUpScreen());
+                            child: SecondaryButton().createButton(
+                                const Text('No estoy registrado'), () {
+                              NavigationService.replaceScreen(
+                                  const SignUpScreen());
                             }),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: PrimaryButton().createButton(const Text('Iniciar sesión'), () {
+                            child: PrimaryButton()
+                                .createButton(const Text('Iniciar sesión'), () {
                               signIn();
                             }),
                           ),
@@ -132,7 +143,8 @@ class _SignInScreenState extends State<SignInScreen> {
       String password = _passwordController.text;
 
       // Intenta iniciar sesión con Supabase
-      final response = await Supabase.instance.client.auth.signInWithPassword(email: email, password: password);
+      final response = await Supabase.instance.client.auth
+          .signInWithPassword(email: email, password: password);
 
       // Comprueba si el inicio de sesión fue exitoso
       if (response.session == null) {

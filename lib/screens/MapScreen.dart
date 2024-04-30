@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:app_final/models/WeatherData.dart';
-import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/MapService/MapService.dart';
+import 'package:app_final/services/MapService/MapStyleService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:app_final/widgets/CustomMapBuilder.dart';
 import 'package:app_final/widgets/CustomSearchWidget.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -46,13 +47,14 @@ class MapScreenState extends State<MapScreen> {
       updateCompassDirection();
     });
     forecasts = WeatherData.weatherForecasts;
-    //sunrise = DateTime(2024, 4, 30, 7, 14);
-    //sunset = DateTime(2024, 4, 30, 21, 8);
-    sunrise = forecasts![0].sunrise;
-    sunset = forecasts![0].sunset;
+    sunrise = DateTime(2024, 4, 30, 7, 14);
+    sunset = DateTime(2024, 4, 30, 21, 8);
+    //sunrise = forecasts![0].sunrise;
+    //sunset = forecasts![0].sunset;
     totalDayLength = sunset.difference(sunrise);
 
     widget.mapService.setSelectedTime(getTimeFromSlider());
+    MapStyleService.setMapStyleFromWeather(forecasts![0]);
   }
 
   @override
@@ -124,7 +126,8 @@ class MapScreenState extends State<MapScreen> {
               },
             ),
           ),
-          if (forecasts != null && false)
+          /*
+          if (forecasts != null )
             Positioned(
               top: MediaQuery.of(context).padding.top + 90,
               left: 10,
@@ -159,6 +162,7 @@ class MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
+          */
           Positioned(
             right: 10,
             bottom: 90,
@@ -166,9 +170,9 @@ class MapScreenState extends State<MapScreen> {
               onTap: resetMapRotation,
               child: Transform.rotate(
                 angle: angleInRadians,
-                child: const Icon(
+                child: Icon(
                   Icons.explore,
-                  color: ColorService.secondary,
+                  color: ThemeService.currentTheme.secondary,
                   size: 48,
                 ),
               ),
@@ -178,7 +182,7 @@ class MapScreenState extends State<MapScreen> {
             right: 10,
             bottom: 20,
             child: FloatingActionButton(
-              backgroundColor: ColorService.secondary,
+              backgroundColor: ThemeService.currentTheme.secondary,
               onPressed: () {
                 setState(() {
                   is3DView = !is3DView;
@@ -187,9 +191,9 @@ class MapScreenState extends State<MapScreen> {
               },
               child: Text(
                 is3DView ? '3D' : '2D',
-                style: const TextStyle(
+                style: TextStyle(
                   decorationThickness: 20.0,
-                  color: ColorService.textOnPrimary,
+                  color: ThemeService.currentTheme.textOnPrimary,
                 ),
               ),
             ),
@@ -217,7 +221,7 @@ class MapScreenState extends State<MapScreen> {
                     max: 1.0,
                     divisions: 100,
                     label: getLabelForValue(),
-                    activeColor: ColorService.primary,
+                    activeColor: ThemeService.currentTheme.primary,
                   )
                 ],
               )),

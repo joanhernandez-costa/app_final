@@ -1,4 +1,4 @@
-import 'package:app_final/services/ColorService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:flutter/material.dart';
 import 'package:app_final/models/WeatherData.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +32,7 @@ class WeatherBottomSheet extends StatelessWidget {
           width: 40,
           height: 5.0,
           decoration: BoxDecoration(
-            color: ColorService.secondary,
+            color: ThemeService.currentTheme.secondary,
             borderRadius: BorderRadius.circular(4.0),
             boxShadow: [
               BoxShadow(
@@ -55,9 +55,9 @@ class WeatherBottomSheet extends StatelessWidget {
       maxChildSize: 0.5,
       builder: (BuildContext context, ScrollController scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: ColorService.surface,
-            borderRadius: BorderRadius.only(
+          decoration: BoxDecoration(
+            color: ThemeService.currentTheme.surface,
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
             ),

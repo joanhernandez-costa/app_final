@@ -3,9 +3,9 @@ import 'package:app_final/screens/FavouritesScreen.dart';
 import 'package:app_final/screens/MapScreen.dart';
 import 'package:app_final/screens/ProfileScreen.dart';
 import 'package:app_final/screens/SettingsScreen.dart';
-import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/MapService/MapService.dart';
 import 'package:app_final/services/NavigationService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:app_final/services/UserService.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -54,9 +54,9 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ColorService.background,
+      backgroundColor: ThemeService.currentTheme.background,
       appBar: AppBar(
-        backgroundColor: ColorService.secondary,
+        backgroundColor: ThemeService.currentTheme.secondary,
         automaticallyImplyLeading: false,
         title: Row(
           children: [
@@ -80,7 +80,7 @@ class HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            color: ColorService.textOnPrimary,
+            color: ThemeService.currentTheme.textOnPrimary,
             onPressed: () {
               NavigationService.showScreen(SettingsScreen());
             },
@@ -89,7 +89,7 @@ class HomeScreenState extends State<HomeScreen> {
       ),
       body: buildScreen(),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: ColorService.secondary,
+        backgroundColor: ThemeService.currentTheme.secondary,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
@@ -105,7 +105,7 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: selectedIndex,
-        selectedItemColor: ColorService.primary,
+        selectedItemColor: ThemeService.currentTheme.primary,
         onTap: onItemTapped,
       ),
     );

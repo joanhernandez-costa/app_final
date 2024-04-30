@@ -5,6 +5,7 @@ import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/MapService/MapStyleService.dart';
 import 'package:app_final/services/MapService/ShadowCastService.dart';
 import 'package:app_final/services/MapService/SunPositionService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -106,7 +107,7 @@ class MapService {
     return Polygon(
       polygonId: PolygonId('shadow_${restaurant.data.id}_$time'),
       points: shadowPerimeter,
-      fillColor: ColorService.secondary.withOpacity(0.3),
+      fillColor: ThemeService.currentTheme.secondary.withOpacity(0.3),
       strokeColor: Colors.black,
       strokeWidth: 2,
       zIndex: 1,
@@ -118,7 +119,7 @@ class MapService {
     return Polygon(
       polygonId: PolygonId('perimeter_${restaurant.data.id}'),
       points: restaurant.detail.perimeterPoints!,
-      fillColor: ColorService.primary.withOpacity(0.5),
+      fillColor: ThemeService.currentTheme.primary.withOpacity(0.5),
       strokeColor: Colors.black,
       strokeWidth: 2,
       zIndex: 1,
@@ -173,7 +174,7 @@ class MapService {
     visibleRegion = await mapController!.getVisibleRegion();
     Set<Circle> circles = {};
 
-    Color baseColor = ColorService.primary;
+    Color baseColor = ThemeService.currentTheme.primary;
     double hueAdjustment = 0;
 
     for (var restaurant in RestaurantData.allRestaurantsData) {
@@ -239,7 +240,7 @@ class MapService {
         Polygon shadowPolygon = Polygon(
           polygonId: PolygonId('shadow_${restaurant.data.id}'),
           points: shadowPerimeter,
-          fillColor: ColorService.secondary.withOpacity(0.3),
+          fillColor: ThemeService.currentTheme.secondary.withOpacity(0.3),
           strokeColor: Colors.black,
           strokeWidth: 2,
           zIndex: 1,
@@ -274,7 +275,7 @@ class MapService {
           Polygon shadowPolygon = Polygon(
             polygonId: PolygonId('shadow_${restaurant.data.id}_level_$i'),
             points: shadows[i],
-            fillColor: ColorService.secondary
+            fillColor: ThemeService.currentTheme.secondary
                 .withOpacity(0.1 + (0.8 / shadows.length * i)),
             strokeColor: Colors.black,
             strokeWidth: 2,
@@ -347,7 +348,9 @@ class MapService {
     return currentCameraPosition?.bearing ?? 0;
   }
 
-  void setMapStyle(String style) {
-    mapController!.setMapStyle(style);
+  void setStyle(MapStyle style) async {
+    String styleJson = await MapStyleService.getJsonStyle(style);
+    mapController!.setMapStyle(styleJson);
+    MapStyleService.updateTheme();
   }
 }

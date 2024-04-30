@@ -1,5 +1,4 @@
-
-import 'package:app_final/services/ColorService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:app_final/services/UserService.dart';
 import 'package:app_final/widgets/CustomButtons.dart';
 import 'package:flutter/material.dart';
@@ -37,17 +36,22 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var userData = UserService.currentUser.value?.userData; // Obtener UserData del currentUser
-    var userInfo = userData != null ? {
-      'Uso Diario Promedio': '${userData.averageDailyUsage.inMinutes.toString()} minutos',
-      'Último Inicio de Sesión': formatDate(userData.lastLogin),
-      'Número de Sesiones': userData.numberOfSessions.toString(),
-      'Fecha de Creación': formatDate(userData.createdAt),
-      'Duración Promedio de Sesiones': '${userData.averageSessionDuration.inMinutes.toString()} minutos',
-    } : {};
+    var userData = UserService
+        .currentUser.value?.userData; // Obtener UserData del currentUser
+    var userInfo = userData != null
+        ? {
+            'Uso Diario Promedio':
+                '${userData.averageDailyUsage.inMinutes.toString()} minutos',
+            'Último Inicio de Sesión': formatDate(userData.lastLogin),
+            'Número de Sesiones': userData.numberOfSessions.toString(),
+            'Fecha de Creación': formatDate(userData.createdAt),
+            'Duración Promedio de Sesiones':
+                '${userData.averageSessionDuration.inMinutes.toString()} minutos',
+          }
+        : {};
 
     return Scaffold(
-      backgroundColor: ColorService.background,
+      backgroundColor: ThemeService.currentTheme.background,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -57,7 +61,9 @@ class ProfileScreenState extends State<ProfileScreen> {
               children: [
                 CircleAvatar(
                   radius: 60,
-                  backgroundImage: NetworkImage(UserService.currentUser.value?.profileImageUrl ?? 'https://your-placeholder-image-url.com'),
+                  backgroundImage: NetworkImage(
+                      UserService.currentUser.value?.profileImageUrl ??
+                          'https://your-placeholder-image-url.com'),
                 ),
                 const SizedBox(height: 8),
                 IconButton(
@@ -67,9 +73,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
                 _buildEditableField('Nombre de Usuario', _userNameController),
                 _buildEditableField('Correo Electrónico', _mailController),
-                _buildEditableField('Contraseña', _passwordController, obscureText: true),
+                _buildEditableField('Contraseña', _passwordController,
+                    obscureText: true),
                 const SizedBox(height: 20),
-                SecondaryButton().createButton(const Text('Actualizar'), _updateProfile),
+                SecondaryButton()
+                    .createButton(const Text('Actualizar'), _updateProfile),
                 const SizedBox(height: 20),
                 const Text(
                   "Estadísticas de uso:",
@@ -100,14 +108,15 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildEditableField(String label, TextEditingController controller, {bool obscureText = false}) {
+  Widget _buildEditableField(String label, TextEditingController controller,
+      {bool obscureText = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
           filled: true,
-          fillColor: ColorService.textOnPrimary,
+          fillColor: ThemeService.currentTheme.textOnPrimary,
           labelText: label,
           border: const OutlineInputBorder(),
         ),
@@ -132,11 +141,12 @@ class ProfileScreenState extends State<ProfileScreen> {
         ? ValidationService.validateMailForSignUp(_mailController.text)
         : null;
     String? passwordError = _passwordController.text.isNotEmpty
-        ? ValidationService.validatePasswordForSignUp(_passwordController.text, _passwordController.text)
+        ? ValidationService.validatePasswordForSignUp(
+            _passwordController.text, _passwordController.text)
         : null;
 
     // Comprobar si hay errores antes de proceder
-    if (userNameError != null || mailError != null || passwordError != null) {      
+    if (userNameError != null || mailError != null || passwordError != null) {
       print('Error: $userNameError, $mailError, $passwordError');
       return;
     }
@@ -145,27 +155,36 @@ class ProfileScreenState extends State<ProfileScreen> {
     var currentUser = UserService.currentUser.value;
 
     // Actualizar solo los campos que el usuario ha cambiado
-    String updatedUserName = _userNameController.text.isNotEmpty ? _userNameController.text : currentUser?.userName ?? '';
-    String updatedMail = _mailController.text.isNotEmpty ? _mailController.text : currentUser?.mail ?? '';
-    String updatedPassword = _passwordController.text.isNotEmpty ? _passwordController.text : currentUser?.password ?? '';
+    String updatedUserName = _userNameController.text.isNotEmpty
+        ? _userNameController.text
+        : currentUser?.userName ?? '';
+    String updatedMail = _mailController.text.isNotEmpty
+        ? _mailController.text
+        : currentUser?.mail ?? '';
+    String updatedPassword = _passwordController.text.isNotEmpty
+        ? _passwordController.text
+        : currentUser?.password ?? '';
 
     // Crear una nueva instancia de AppUser con los datos actualizados
     AppUser updatedUser = AppUser(
       userName: updatedUserName,
       mail: updatedMail,
       password: updatedPassword,
-      id: currentUser?.id, 
+      id: currentUser?.id,
       profileImageUrl: currentUser?.profileImageUrl,
     );
 
     // Llamar a UserService para actualizar el usuario
     UserService.updateCurrentUser(updatedUser).then((_) {
       // Mostrar mensaje de éxito
-      final snackBar = SnackBar(content: Text('Perfil de ${updatedUser.userName} actualizado con éxito'));
+      final snackBar = SnackBar(
+          content:
+              Text('Perfil de ${updatedUser.userName} actualizado con éxito'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }).catchError((error) {
       // Mostrar mensaje de error
-      final snackBar = SnackBar(content: Text('Error al actualizar el perfil: $error'));
+      final snackBar =
+          SnackBar(content: Text('Error al actualizar el perfil: $error'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     });
   }

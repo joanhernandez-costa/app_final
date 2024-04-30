@@ -1,7 +1,6 @@
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/screens/RestaurantDetailScreen.dart';
 import 'package:app_final/services/MapService/MapService.dart';
-import 'package:app_final/services/MapService/MapStyleService.dart';
 import 'package:app_final/services/NavigationService.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -21,7 +20,6 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
   Set<Marker> currentMarkers = {};
   Set<Polygon> currentPolygons = {};
   Set<Circle> currentCircles = {};
-  late String styleJson;
 
   LatLng initialPosition = const LatLng(40.44909830960289, -3.7121435091200987);
 
@@ -62,9 +60,9 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
 
     controllerCompleter.complete(controller);
     widget.mapService.setMapController(controller);
-    styleJson = await widget.mapService.mapStyle.loadMapStyle(MapStyle.retro);
-    widget.mapService.setMapStyle(styleJson);
   }
+
+  void onMapStyleUpdated() {}
 
   @override
   Widget build(BuildContext context) {

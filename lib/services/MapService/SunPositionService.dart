@@ -17,17 +17,11 @@ class SunPositionService {
     return solarData['altitude']! * 180 / pi; // Convertir radianes a grados
   }
 
-  // Devuelve el día del año como un entero.
-  int getDayOfYear(DateTime date) {
-    final firstDayOfYear = DateTime(date.year, 1, 1);
-    final difference = date.difference(firstDayOfYear).inDays;
-    return difference + 1; // Se suma 1 porque inDays cuenta desde 0
-  }
-
   static bool isRestaurantInSunLight(LatLng position, DateTime localTime) {
     return true;
   }
 }
+
 /*
 import 'dart:math';
 import 'package:app_final/services/MapService/Utils.dart';

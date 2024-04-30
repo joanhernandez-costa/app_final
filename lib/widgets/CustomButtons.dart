@@ -1,6 +1,6 @@
 import 'package:app_final/services/ColorService.dart';
+import 'package:app_final/services/ThemeService.dart';
 import 'package:flutter/material.dart';
-
 
 abstract class ButtonFactory {
   Widget createButton(Widget child, VoidCallback onPressed);
@@ -8,13 +8,16 @@ abstract class ButtonFactory {
 
 ButtonStyle customButtonStyle(Color backgroundColor, Color foregroundColor) {
   return ButtonStyle(
-    backgroundColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
+    backgroundColor:
+        MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
       if (states.contains(MaterialState.hovered)) {
-        return ColorService.changeLightness(backgroundColor, 0.85); // Más oscuro en hover
+        return ColorService.changeLightness(
+            backgroundColor, 0.85); // Más oscuro en hover
       } else if (states.contains(MaterialState.pressed)) {
-        return ColorService.changeLightness(backgroundColor, 0.7); // Aún más oscuro cuando está presionado
+        return ColorService.changeLightness(
+            backgroundColor, 0.7); // Aún más oscuro cuando está presionado
       } else if (states.contains(MaterialState.error)) {
-        return ColorService.error;
+        return ThemeService.currentTheme.error;
       }
       return backgroundColor; // Color normal
     }),
@@ -27,7 +30,8 @@ class PrimaryButton extends ButtonFactory {
   @override
   Widget createButton(Widget child, VoidCallback onPressed) {
     return ElevatedButton(
-      style: customButtonStyle(ColorService.primary, ColorService.textOnPrimary),
+      style: customButtonStyle(ThemeService.currentTheme.primary,
+          ThemeService.currentTheme.textOnPrimary),
       onPressed: onPressed,
       child: Center(child: child),
     );
@@ -39,7 +43,8 @@ class SecondaryButton extends ButtonFactory {
   @override
   Widget createButton(Widget child, VoidCallback onPressed) {
     return ElevatedButton(
-      style: customButtonStyle(ColorService.textOnPrimary, ColorService.primary),
+      style: customButtonStyle(ThemeService.currentTheme.textOnPrimary,
+          ThemeService.currentTheme.primary),
       onPressed: onPressed,
       child: Center(child: child),
     );
@@ -51,7 +56,8 @@ class ErrorButton extends ButtonFactory {
   @override
   Widget createButton(Widget child, VoidCallback onPressed) {
     return ElevatedButton(
-      style: customButtonStyle(ColorService.error, ColorService.textOnError),
+      style: customButtonStyle(ThemeService.currentTheme.error,
+          ThemeService.currentTheme.textOnError),
       onPressed: onPressed,
       child: Center(child: child),
     );
@@ -64,7 +70,8 @@ class IconButtonFactory extends ButtonFactory {
   Widget createButton(Widget child, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
-      style: customButtonStyle(ColorService.secondary, ColorService.textOnSecondary),
+      style: customButtonStyle(ThemeService.currentTheme.secondary,
+          ThemeService.currentTheme.textOnSecondary),
       child: Center(child: child), // Centrar el icono
     );
   }
