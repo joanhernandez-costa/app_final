@@ -20,9 +20,10 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
   Completer<GoogleMapController> controllerCompleter = Completer();
   Set<Marker> currentMarkers = {};
   Set<Polygon> currentPolygons = {};
+  Set<Circle> currentCircles = {};
   late String styleJson;
 
-  final LatLng initialPosition = const LatLng(40.416869, -3.703470);
+  LatLng initialPosition = const LatLng(40.44909830960289, -3.7121435091200987);
 
   @override
   void initState() {
@@ -47,6 +48,13 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
         currentPolygons = updatedPolygons;
       });
     };
+
+    widget.mapService.onCirclesUpdated = (updatedCircles) {
+      if (!mounted) return;
+      setState(() {
+        currentCircles = updatedCircles;
+      });
+    };
   }
 
   void onMapCreated(GoogleMapController controller) async {
@@ -63,16 +71,17 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
     return Scaffold(
       body: GoogleMap(
         onMapCreated: onMapCreated,
-        initialCameraPosition: const CameraPosition(
-            target: LatLng(40.416869, -3.703470), zoom: 15),
+        initialCameraPosition:
+            CameraPosition(target: initialPosition, zoom: 15),
         zoomControlsEnabled: false,
         markers: currentMarkers,
         polygons: currentPolygons,
+        circles: currentCircles,
         onCameraMove: (CameraPosition position) {
           widget.mapService.updateCameraPosition(position);
         },
         onCameraIdle: () {
-          widget.mapService.onCameraIdle();
+          widget.mapService.onCameraIdle(DateTime.now());
         },
       ),
     );

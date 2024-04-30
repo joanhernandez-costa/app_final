@@ -3,15 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:app_final/models/AppTheme.dart';
 
 class ColorService {
-
   static AppTheme currentTheme = AppTheme(
-  theme: {
-    "primary": Color.fromRGBO(255, 166, 43, 1),
-    "secondary": Color.fromRGBO(22, 105, 122, 1),
-    
-  },
-  currentStyle: MapStyle.night, 
-);
+    theme: {
+      "primary": Color.fromRGBO(255, 166, 43, 1),
+      "secondary": Color.fromRGBO(22, 105, 122, 1),
+    },
+    currentStyle: MapStyle.night,
+  );
 
   // Colores primarios
   static const Color primary = Color.fromRGBO(255, 166, 43, 1);
@@ -40,9 +38,11 @@ class ColorService {
     return color.withOpacity(opacity);
   }
 
-  // Cambiar el tono de un color
-  static double adjustHue(double hue, double adjustment) {
-    return (hue + adjustment) % 360.0;
+  // Cambiar el tono de un color y devolver el color modificado
+  static Color adjustHue(Color color, double adjustment) {
+    HSLColor hsl = HSLColor.fromColor(color);
+    HSLColor adjustedHsl = hsl.withHue((hsl.hue + adjustment) % 360.0);
+    return adjustedHsl.toColor();
   }
 
   // Cambiar la saturación de un color
@@ -63,27 +63,24 @@ class ColorService {
 
   // Devuelve los colores análogos
   static List<Color> getAnalogousColors(Color color) {
-    HSLColor hsl = HSLColor.fromColor(color);
     return [
-      HSLColor.fromAHSL(hsl.alpha, adjustHue(hsl.hue, -30), hsl.saturation, hsl.lightness).toColor(),
+      adjustHue(color, -30),
       color,
-      HSLColor.fromAHSL(hsl.alpha, adjustHue(hsl.hue, 30), hsl.saturation, hsl.lightness).toColor(),
+      adjustHue(color, 30),
     ];
   }
 
   // Devuelve el color complementario
   static Color getComplementaryColor(Color color) {
-    HSLColor hsl = HSLColor.fromColor(color);
-    return HSLColor.fromAHSL(hsl.alpha, adjustHue(hsl.hue, 180), hsl.saturation, hsl.lightness).toColor();
+    return adjustHue(color, 180);
   }
 
   // Devuelve la tríada complementaria al color
   static List<Color> getTriadicColors(Color color) {
-    HSLColor hsl = HSLColor.fromColor(color);
     return [
-      HSLColor.fromAHSL(hsl.alpha, adjustHue(hsl.hue, 120), hsl.saturation, hsl.lightness).toColor(),
+      adjustHue(color, 120),
       color,
-      HSLColor.fromAHSL(hsl.alpha, adjustHue(hsl.hue, 240), hsl.saturation, hsl.lightness).toColor(),
+      adjustHue(color, 240),
     ];
   }
 }

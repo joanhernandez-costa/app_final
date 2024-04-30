@@ -27,7 +27,8 @@ class HomeScreenState extends State<HomeScreen> {
     super.initState();
     mapService = MapService(
         onMarkersUpdated: (Set<Marker> markers) {},
-        onPolygonsUpdated: (Set<Polygon> shadows) {});
+        onPolygonsUpdated: (Set<Polygon> shadows) {},
+        onCirclesUpdated: (Set<Circle> circles) {});
     currentUser = UserService.currentUser.value;
   }
 

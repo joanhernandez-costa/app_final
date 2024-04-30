@@ -27,8 +27,13 @@ class MapScreenState extends State<MapScreen> {
 
   double? userHeadingDirection = 0;
   double mapRotation = 0.0;
+  double sliderValue = 0.0;
 
   StreamSubscription<CompassEvent>? compassSubscription;
+
+  late DateTime sunrise;
+  late DateTime sunset;
+  late Duration totalDayLength;
 
   @override
   void initState() {
@@ -41,6 +46,10 @@ class MapScreenState extends State<MapScreen> {
       updateCompassDirection();
     });
     forecasts = WeatherData.weatherForecasts;
+
+    sunrise = forecasts![0].sunrise;
+    sunset = forecasts![0].sunset;
+    totalDayLength = sunset.difference(sunrise);
   }
 
   @override
@@ -79,12 +88,23 @@ class MapScreenState extends State<MapScreen> {
     });
   }
 
+  String getLabelForValue(double value) {
+    DateTime time = getTimeFromSlider();
+    return DateFormat('HH:mm').format(time);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Calcular ángulo combinando dirección del usuario y la rotación del mapa.
     double combinedAngle =
         ((userHeadingDirection ?? 0) - mapRotation - 45) % 360;
     double angleInRadians = combinedAngle * (pi / 180);
+
+    if (forecasts == null || forecasts!.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text('No forecast data available')),
+      );
+    }
 
     return Scaffold(
       body: Stack(
@@ -171,8 +191,37 @@ class MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
+          Positioned(
+              right: 60,
+              bottom: 20,
+              left: 10,
+              child: Column(
+                children: [
+                  Slider(
+                    value: sliderValue,
+                    onChanged: (value) {
+                      setState(() {
+                        sliderValue = value;
+                        DateTime selectedTime = getTimeFromSlider();
+                        widget.mapService.updateShadows(selectedTime);
+                      });
+                    },
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 100,
+                    label: getLabelForValue(sliderValue),
+                    activeColor: ColorService.primary,
+                  )
+                ],
+              )),
         ],
       ),
     );
+  }
+
+  DateTime getTimeFromSlider() {
+    DateTime time = sunrise.add(
+        Duration(seconds: (totalDayLength.inSeconds * sliderValue).round()));
+    return time;
   }
 }

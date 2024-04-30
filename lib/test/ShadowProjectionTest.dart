@@ -24,13 +24,12 @@ void main() {
     test('Shadow projection accuracy', () {
       // Crear una instancia del servicio y los datos necesarios para la prueba
       final shadowService = ShadowCastService();
-      final RestaurantData restaurant = RestaurantData.allRestaurantsData[0];
-      final DateTime localTime =
-          DateTime.now(); // Fecha de ejemplo, como el solsticio de verano
+      final RestaurantData restaurant = RestaurantData.allRestaurantsData[1];
+      final DateTime localTime = DateTime.now();
 
       // Llamada al método del servicio para obtener el perímetro de la sombra
       List<LatLng> shadowPerimeter =
-          shadowService.projectShadow(restaurant, localTime);
+          shadowService.getShadow(restaurant, localTime);
 
       for (var i = 0; i < restaurant.detail.perimeterPoints!.length; i++) {
         var originalPoint = restaurant.detail.perimeterPoints![i];

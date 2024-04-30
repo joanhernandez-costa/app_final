@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/MapService/MapStyleService.dart';
@@ -14,13 +16,17 @@ class MapService {
 
   LatLngBounds? visibleRegion;
   Set<Marker> markers = <Marker>{};
-  Set<Polygon> shadows = <Polygon>{};
+  Set<Polygon> polygons = <Polygon>{};
 
   Function(Set<Marker>) onMarkersUpdated;
   Function(Set<Polygon>) onPolygonsUpdated;
+  Function(Set<Circle>) onCirclesUpdated;
   dynamic Function(RestaurantData)? onMarkerTapped;
 
-  MapService({required this.onMarkersUpdated, required this.onPolygonsUpdated});
+  MapService(
+      {required this.onMarkersUpdated,
+      required this.onPolygonsUpdated,
+      required this.onCirclesUpdated});
 
   void setMapController(GoogleMapController controller) {
     mapController = controller;
@@ -37,43 +43,23 @@ class MapService {
     );
   }
 
-  //Crea un polígono para mostrarlo en el mapa
-  Future<Polygon> createPolygonInMap(RestaurantData restaurant) async {
-    DateTime localTime = DateTime.now();
-    List<LatLng> shadowPerimeter =
-        await shadowService.projectShadow(restaurant, localTime);
-    shadowPerimeter.add(shadowPerimeter.first);
-
-    final String polygonIdVal = 'polygon_${restaurant.data.id}';
-    final PolygonId polygonId = PolygonId(polygonIdVal);
-
-    final Polygon polygon = Polygon(
-      polygonId: polygonId,
-      points: restaurant.detail.perimeterPoints!,
-      fillColor: Colors.red, //ColorService.background,
-      strokeColor: ColorService.background,
-      strokeWidth: 1,
-      zIndex: 1,
-      geodesic: true,
-    );
-
-    print('Polígono $polygonIdVal añadido');
-    return polygon;
-  }
-
-/*
   // Función para crear un cuadrado en el mapa
-  Polygon createSquareInMap(LatLng centerPosition, double sideLength) {
-    double halfSide = sideLength / 2;
+  Polygon drawSquare(LatLng centerPosition, double sideLength) {
+    const double latDegree = 110574;
+    final double lngDegree = 111320 * cos(centerPosition.latitude * pi / 180);
+
+    double halfSideLat = (sideLength / 2) / latDegree;
+    double halfSideLng = (sideLength / 2) / lngDegree;
+
     List<LatLng> squarePerimeter = [
-      LatLng(centerPosition.latitude + halfSide,
-          centerPosition.longitude - halfSide),
-      LatLng(centerPosition.latitude + halfSide,
-          centerPosition.longitude + halfSide),
-      LatLng(centerPosition.latitude - halfSide,
-          centerPosition.longitude + halfSide),
-      LatLng(centerPosition.latitude - halfSide,
-          centerPosition.longitude - halfSide),
+      LatLng(centerPosition.latitude + halfSideLat,
+          centerPosition.longitude - halfSideLng),
+      LatLng(centerPosition.latitude + halfSideLat,
+          centerPosition.longitude + halfSideLng),
+      LatLng(centerPosition.latitude - halfSideLat,
+          centerPosition.longitude + halfSideLng),
+      LatLng(centerPosition.latitude - halfSideLat,
+          centerPosition.longitude - halfSideLng),
     ];
 
     final String polygonIdVal =
@@ -83,20 +69,63 @@ class MapService {
     final Polygon square = Polygon(
       polygonId: polygonId,
       points: squarePerimeter,
-      fillColor: Colors.green,
+      fillColor: Colors.green.withOpacity(0.5),
       strokeColor: Colors.black,
       strokeWidth: 3,
       zIndex: 2,
       geodesic: true,
     );
 
-    print('Cuadrado $polygonIdVal añadido');
     return square;
   }
-*/
+
+  // Función para crear un círculo en el mapa
+  Circle drawCircle(LatLng center, double radius, Color fillColor) {
+    final String circleIdVal = 'circle_${center.latitude}_${center.longitude}';
+    final CircleId circleId = CircleId(circleIdVal);
+
+    final Circle circle = Circle(
+      circleId: circleId,
+      center: center,
+      radius: radius,
+      fillColor: fillColor.withOpacity(0.5),
+      strokeColor: Colors.black,
+      strokeWidth: 2,
+      zIndex: 2,
+    );
+
+    return circle;
+  }
+
+  //Crea un polígono para mostrarlo en el mapa
+  Polygon drawShadowPolygon(RestaurantData restaurant, DateTime time) {
+    List<LatLng> shadowPerimeter = shadowService.getShadow(restaurant, time);
+    shadowPerimeter.add(shadowPerimeter.first);
+
+    return Polygon(
+      polygonId: PolygonId('shadow_${restaurant.data.id}_$time'),
+      points: shadowPerimeter,
+      fillColor: ColorService.secondary.withOpacity(0.3),
+      strokeColor: Colors.black,
+      strokeWidth: 2,
+      zIndex: 1,
+      geodesic: true,
+    );
+  }
+
+  Polygon drawPerimeterPolygon(RestaurantData restaurant) {
+    return Polygon(
+      polygonId: PolygonId('perimeter_${restaurant.data.id}'),
+      points: restaurant.detail.perimeterPoints!,
+      fillColor: ColorService.primary.withOpacity(0.5),
+      strokeColor: Colors.black,
+      strokeWidth: 2,
+      zIndex: 1,
+    );
+  }
 
   // Agregar un marcador de Punto de Interés (POI)
-  void addPOIMarker(RestaurantData restaurant) {
+  Marker addPOIMarker(RestaurantData restaurant) {
     LatLng restaurantPosition =
         LatLng(restaurant.data.latitude, restaurant.data.longitude);
     bool isInSunLight = SunPositionService.isRestaurantInSunLight(
@@ -118,16 +147,18 @@ class MapService {
           }
         });
 
-    markers.add(marker);
+    return marker;
   }
 
-  void onCameraIdle() async {
+  void onCameraIdle(DateTime now) async {
     // Obtiene el zoom del mapa
     var zoom = await mapController?.getZoomLevel();
+    visibleRegion = await mapController!.getVisibleRegion();
 
     if (zoom! > 15) {
       loadMarkers();
-      loadPolygons();
+      loadPolygons(now);
+      //loadCircles();
     } else {
       // Eliminar los marcadores si el zoom es demasiado bajo
       removeMarkers();
@@ -135,48 +166,96 @@ class MapService {
     }
   }
 
-  void loadPolygons() async {
+  void loadCircles() async {
     if (mapController == null) return;
 
-    LatLngBounds visibleRegion = await mapController!.getVisibleRegion();
-    Set<Polygon> newPolygons = {};
+    visibleRegion = await mapController!.getVisibleRegion();
+    Set<Circle> circles = {};
+
+    Color baseColor = ColorService.primary;
+    double hueAdjustment = 0;
 
     for (var restaurant in RestaurantData.allRestaurantsData) {
       LatLng restaurantLocation =
           LatLng(restaurant.data.latitude, restaurant.data.longitude);
-      if (visibleRegion.contains(restaurantLocation) &&
+
+      hueAdjustment += 20;
+      Color restaurantColor = ColorService.adjustHue(baseColor, hueAdjustment);
+
+      if (visibleRegion!.contains(restaurantLocation) &&
           restaurant.detail.perimeterPoints != null) {
-        Polygon polygon = await createPolygonInMap(restaurant);
-        newPolygons.add(polygon);
+        for (var basePoint in restaurant.detail.perimeterPoints!) {
+          Circle circle = drawCircle(basePoint, 2.5, restaurantColor);
+          circles.add(circle);
+        }
       }
     }
+    onCirclesUpdated(circles);
+  }
 
-    shadows = newPolygons;
-    onPolygonsUpdated(shadows);
+  void loadPolygons(DateTime now) async {
+    if (mapController == null) return;
+
+    LatLngBounds visibleRegion = await mapController!.getVisibleRegion();
+    this.visibleRegion = visibleRegion;
+
+    updateShadows(now);
+    onPolygonsUpdated(polygons);
   }
 
   // Cargar marcadores basados en la posición central del mapa
   void loadMarkers() async {
     markers.clear();
 
-    LatLngBounds? visibleRegion = await mapController?.getVisibleRegion();
+    visibleRegion = await mapController?.getVisibleRegion();
     if (visibleRegion == null) return;
 
     for (var restaurant in RestaurantData.allRestaurantsData) {
       LatLng restaurantLocation =
           LatLng(restaurant.data.latitude, restaurant.data.longitude);
 
-      if (visibleRegion.contains(restaurantLocation)) {
-        addPOIMarker(restaurant);
+      if (visibleRegion!.contains(restaurantLocation)) {
+        Marker marker = addPOIMarker(restaurant);
+        markers.add(marker);
       }
     }
 
     onMarkersUpdated(markers);
   }
 
+  void updateShadows(DateTime selectedTime) async {
+    if (mapController == null) return;
+
+    polygons.removeWhere(
+        (polygon) => polygon.polygonId.value.startsWith('shadow_'));
+
+    for (var restaurant in RestaurantData.allRestaurantsData) {
+      LatLng position =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      if (visibleRegion?.contains(position) ?? false) {
+        List<LatLng> shadowPerimeter =
+            shadowService.getShadow(restaurant, selectedTime);
+        Polygon shadowPolygon = Polygon(
+          polygonId: PolygonId('shadow_${restaurant.data.id}'),
+          points: shadowPerimeter,
+          fillColor: ColorService.secondary.withOpacity(0.3),
+          strokeColor: Colors.black,
+          strokeWidth: 2,
+          zIndex: 1,
+          geodesic: true,
+        );
+        polygons
+          ..add(shadowPolygon)
+          ..add(drawPerimeterPolygon(restaurant));
+      }
+    }
+
+    onPolygonsUpdated(polygons);
+  }
+
   void removePolygons() {
-    shadows.clear();
-    onPolygonsUpdated(shadows);
+    polygons.clear();
+    onPolygonsUpdated(polygons);
   }
 
   void removeMarkers() {
