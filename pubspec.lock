@@ -25,6 +25,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.5.1"
+  apsl_sun_calc:
+    dependency: "direct main"
+    description:
+      name: apsl_sun_calc
+      sha256: f39210ed1db6f3d94443ae31b18bba760f16a88fe15db4f31c2047cbe08b7880
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   args:
     dependency: transitive
     description:

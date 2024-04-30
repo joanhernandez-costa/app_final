@@ -46,10 +46,11 @@ class MapScreenState extends State<MapScreen> {
       updateCompassDirection();
     });
     forecasts = WeatherData.weatherForecasts;
-
     sunrise = forecasts![0].sunrise;
     sunset = forecasts![0].sunset;
     totalDayLength = sunset.difference(sunrise);
+
+    widget.mapService.setSelectedTime(getTimeFromSlider());
   }
 
   @override
@@ -203,7 +204,8 @@ class MapScreenState extends State<MapScreen> {
                       setState(() {
                         sliderValue = value;
                         DateTime selectedTime = getTimeFromSlider();
-                        widget.mapService.updateShadows(selectedTime);
+                        widget.mapService.setSelectedTime(selectedTime);
+                        widget.mapService.loadPolygons();
                       });
                     },
                     min: 0.0,

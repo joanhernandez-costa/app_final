@@ -15,6 +15,7 @@ class MapService {
   ShadowCastService shadowService = ShadowCastService();
 
   LatLngBounds? visibleRegion;
+  DateTime? selectedTime;
   Set<Marker> markers = <Marker>{};
   Set<Polygon> polygons = <Polygon>{};
 
@@ -150,14 +151,14 @@ class MapService {
     return marker;
   }
 
-  void onCameraIdle(DateTime now) async {
+  void onCameraIdle() async {
     // Obtiene el zoom del mapa
     var zoom = await mapController?.getZoomLevel();
     visibleRegion = await mapController!.getVisibleRegion();
 
     if (zoom! > 15) {
       loadMarkers();
-      loadPolygons(now);
+      loadPolygons();
       //loadCircles();
     } else {
       // Eliminar los marcadores si el zoom es demasiado bajo
@@ -193,17 +194,17 @@ class MapService {
     onCirclesUpdated(circles);
   }
 
-  void loadPolygons(DateTime now) async {
+  void loadPolygons() async {
     if (mapController == null) return;
 
     LatLngBounds visibleRegion = await mapController!.getVisibleRegion();
     this.visibleRegion = visibleRegion;
 
-    updateShadows(now);
+    //updateShadows();
+    updateIncrementalShadows();
     onPolygonsUpdated(polygons);
   }
 
-  // Cargar marcadores basados en la posición central del mapa
   void loadMarkers() async {
     markers.clear();
 
@@ -223,7 +224,7 @@ class MapService {
     onMarkersUpdated(markers);
   }
 
-  void updateShadows(DateTime selectedTime) async {
+  void updateShadows() async {
     if (mapController == null) return;
 
     polygons.removeWhere(
@@ -234,7 +235,7 @@ class MapService {
           LatLng(restaurant.data.latitude, restaurant.data.longitude);
       if (visibleRegion?.contains(position) ?? false) {
         List<LatLng> shadowPerimeter =
-            shadowService.getShadow(restaurant, selectedTime);
+            shadowService.getShadow(restaurant, selectedTime!);
         Polygon shadowPolygon = Polygon(
           polygonId: PolygonId('shadow_${restaurant.data.id}'),
           points: shadowPerimeter,
@@ -251,6 +252,50 @@ class MapService {
     }
 
     onPolygonsUpdated(polygons);
+  }
+
+  void updateIncrementalShadows() async {
+    if (mapController == null) return;
+
+    visibleRegion = await mapController!.getVisibleRegion();
+    Set<Polygon> newShadows = {};
+
+    polygons.removeWhere(
+        (polygon) => polygon.polygonId.value.startsWith('shadow_'));
+
+    for (var restaurant in RestaurantData.allRestaurantsData) {
+      LatLng position =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      if (visibleRegion!.contains(position) &&
+          restaurant.detail.perimeterPoints != null) {
+        List<List<LatLng>> shadows = shadowService.calculateIncrementalShadows(
+            restaurant, selectedTime!);
+        for (int i = 0; i < shadows.length; i++) {
+          Polygon shadowPolygon = Polygon(
+            polygonId: PolygonId('shadow_${restaurant.data.id}_level_$i'),
+            points: shadows[i],
+            fillColor: ColorService.secondary
+                .withOpacity(0.1 + (0.8 / shadows.length * i)),
+            strokeColor: Colors.black,
+            strokeWidth: 2,
+            zIndex: 1,
+            geodesic: true,
+          );
+          newShadows.add(shadowPolygon);
+        }
+
+        polygons
+          ..addAll(newShadows)
+          ..add(drawPerimeterPolygon(restaurant));
+        newShadows.clear();
+      }
+    }
+
+    onPolygonsUpdated(polygons);
+  }
+
+  void setSelectedTime(DateTime selectedTime) {
+    this.selectedTime = selectedTime;
   }
 
   void removePolygons() {

@@ -1,4 +1,35 @@
 import 'dart:math';
+import 'package:apsl_sun_calc/apsl_sun_calc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+class SunPositionService {
+  /// Devuelve el azimut solar en grados para una latitud, longitud y fecha/hora local dados.
+  double calculateSolarAzimuth(LatLng position, DateTime localTime) {
+    var solarData = SunCalc.getSunPosition(
+        localTime, position.latitude, position.longitude);
+    return solarData['azimuth']! * 180 / pi;
+  }
+
+  /// Devuelve la elevación solar en grados para una latitud, longitud y fecha/hora local dados.
+  double getSunElevation(LatLng position, DateTime localTime) {
+    var solarData = SunCalc.getSunPosition(
+        localTime, position.latitude, position.longitude);
+    return solarData['altitude']! * 180 / pi; // Convertir radianes a grados
+  }
+
+  // Devuelve el día del año como un entero.
+  int getDayOfYear(DateTime date) {
+    final firstDayOfYear = DateTime(date.year, 1, 1);
+    final difference = date.difference(firstDayOfYear).inDays;
+    return difference + 1; // Se suma 1 porque inDays cuenta desde 0
+  }
+
+  static bool isRestaurantInSunLight(LatLng position, DateTime localTime) {
+    return true;
+  }
+}
+/*
+import 'dart:math';
 import 'package:app_final/services/MapService/Utils.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -114,3 +145,4 @@ class SunPositionService {
     return true;
   }
 }
+*/

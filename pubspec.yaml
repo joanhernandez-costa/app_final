@@ -27,6 +27,7 @@ dependencies:
   url_launcher: ^6.2.5
   flutter_typeahead: ^5.2.0
   geolocator: ^11.0.0
+  apsl_sun_calc: ^0.0.2
 
 dev_dependencies:
   flutter_test:

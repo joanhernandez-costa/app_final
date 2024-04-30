@@ -81,7 +81,7 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
           widget.mapService.updateCameraPosition(position);
         },
         onCameraIdle: () {
-          widget.mapService.onCameraIdle(DateTime.now());
+          widget.mapService.onCameraIdle();
         },
       ),
     );
