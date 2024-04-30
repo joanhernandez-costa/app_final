@@ -46,6 +46,8 @@ class MapScreenState extends State<MapScreen> {
       updateCompassDirection();
     });
     forecasts = WeatherData.weatherForecasts;
+    //sunrise = DateTime(2024, 4, 30, 7, 14);
+    //sunset = DateTime(2024, 4, 30, 21, 8);
     sunrise = forecasts![0].sunrise;
     sunset = forecasts![0].sunset;
     totalDayLength = sunset.difference(sunrise);
@@ -89,7 +91,7 @@ class MapScreenState extends State<MapScreen> {
     });
   }
 
-  String getLabelForValue(double value) {
+  String getLabelForValue() {
     DateTime time = getTimeFromSlider();
     return DateFormat('HH:mm').format(time);
   }
@@ -205,13 +207,16 @@ class MapScreenState extends State<MapScreen> {
                         sliderValue = value;
                         DateTime selectedTime = getTimeFromSlider();
                         widget.mapService.setSelectedTime(selectedTime);
-                        widget.mapService.loadPolygons();
+                        if (widget.mapService.currentCameraPosition!.zoom >
+                            15) {
+                          widget.mapService.loadPolygons();
+                        }
                       });
                     },
                     min: 0.0,
                     max: 1.0,
                     divisions: 100,
-                    label: getLabelForValue(sliderValue),
+                    label: getLabelForValue(),
                     activeColor: ColorService.primary,
                   )
                 ],

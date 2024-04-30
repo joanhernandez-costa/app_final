@@ -60,6 +60,7 @@ class AuthenticationState extends State<Authentication> {
     await dotenv.load(fileName: 'supabase_initialize.env');
     await Supabase.initialize(
         anonKey: dotenv.env['SUPABASE_KEY']!, url: dotenv.env['SUPABASE_URL']!);
+    WeatherData.initializeTimeZone();
 
     UserService.registeredUsers =
         await ApiService.getAllItems<AppUser>(fromJson: AppUser.fromJson);

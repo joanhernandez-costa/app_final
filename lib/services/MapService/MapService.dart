@@ -200,8 +200,8 @@ class MapService {
     LatLngBounds visibleRegion = await mapController!.getVisibleRegion();
     this.visibleRegion = visibleRegion;
 
-    //updateShadows();
-    updateIncrementalShadows();
+    updateShadows();
+    //updateIncrementalShadows();
     onPolygonsUpdated(polygons);
   }
 

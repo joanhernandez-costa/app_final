@@ -1,0 +1,9 @@
+Hacer:
+
+1. Correcta gestión del color, modificar ColorService y utilizar AppTheme para que acepte distintas paletas.
+2. Pantalla de Configuración.
+3. Completar lógica para saber si una terraza está al sol o no.
+
+Arreglar:
+
+1. Hora que se muestra en el slider de MapScreen, sunrise y sunset no tienen los valores correctos.

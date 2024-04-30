@@ -64,27 +64,48 @@ class ShadowCastService {
     return convexHull(allPoints);
   }
 
+  // Calcula la envolvente convexa de un conjunto de puntos utilizando el algoritmo de Graham scan
   List<LatLng> convexHull(List<LatLng> points) {
     if (points.length < 3) return points;
     points.sort((p1, p2) => (p1.latitude != p2.latitude)
         ? p1.latitude.compareTo(p2.latitude)
         : p1.longitude.compareTo(p2.longitude));
 
-    List<LatLng> hull = [points.removeAt(0), points.removeAt(0)];
-    points.forEach((point) {
-      while (hull.length > 1 &&
-          orientation(hull[hull.length - 2], hull.last, point) <= 0) {
+    List<LatLng> hull = [];
+
+    // Función de ayuda para determinar la orientación
+    int orientation(LatLng p, LatLng q, LatLng r) {
+      double val = (q.longitude - p.longitude) * (r.latitude - q.latitude) -
+          (q.latitude - p.latitude) * (r.longitude - q.longitude);
+      if (val == 0) return 0;
+      return (val > 0) ? 1 : -1;
+    }
+
+    // Construir la envolvente inferior
+    for (var point in points) {
+      while (hull.length >= 2 &&
+          orientation(hull[hull.length - 2], hull[hull.length - 1], point) !=
+              -1) {
         hull.removeLast();
       }
       hull.add(point);
-    });
+    }
 
+    // Construir la envolvente superior
+    int t =
+        hull.length + 1; // Tamaño del hull antes de procesar el lado superior
+    for (int i = points.length - 2; i >= 0; i--) {
+      while (hull.length >= t &&
+          orientation(
+                  hull[hull.length - 2], hull[hull.length - 1], points[i]) !=
+              -1) {
+        hull.removeLast();
+      }
+      hull.add(points[i]);
+    }
+
+    hull.removeLast();
     return hull;
-  }
-
-  double orientation(LatLng p, LatLng q, LatLng r) {
-    return (q.latitude - p.latitude) * (r.longitude - q.longitude) -
-        (q.longitude - p.longitude) * (r.latitude - q.latitude);
   }
 
   double calculateShadowLength(double height, double solarElevation) {
