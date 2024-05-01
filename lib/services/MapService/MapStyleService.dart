@@ -1,6 +1,7 @@
 import 'package:app_final/models/WeatherData.dart';
 import 'package:app_final/services/ThemeService.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 
 enum MapStyle {
   night,
@@ -12,7 +13,7 @@ enum MapStyle {
   // MAPA DE NOCHE
 }
 
-class MapStyleService {
+class MapStyleService with ChangeNotifier {
   static final Map<MapStyle, String> mapStyles = {
     MapStyle.night: 'nightTheme',
     MapStyle.aubergine: 'aubergineTheme',
@@ -20,7 +21,7 @@ class MapStyleService {
     MapStyle.standard: 'default',
   };
 
-  static MapStyle currentMapStyle = MapStyle.standard;
+  static MapStyle? currentMapStyle;
 
   static String getStylePath(MapStyle style) {
     switch (style) {
@@ -81,11 +82,20 @@ class MapStyleService {
     }
   }
 
-  static void mapStyleFromTime(DateTime selectedTime) {
+  static MapStyle mapStyleFromTime(DateTime selectedTime) {
     final currentHour = selectedTime.hour;
 
-    switch (currentHour) {}
-    updateTheme();
+    if (currentHour >= 6 && currentHour < 12) {
+      // Por la mañana
+      currentMapStyle = MapStyle.standard;
+    } else if (currentHour >= 12 && currentHour < 18) {
+      // Por la tarde
+      currentMapStyle = MapStyle.retro;
+    } else {
+      // Por la noche
+      currentMapStyle = MapStyle.night;
+    }
+    return currentMapStyle!;
   }
 
   static Future<String> getJsonStyle(MapStyle newMapStyle) async {
@@ -93,7 +103,11 @@ class MapStyleService {
   }
 
   static void updateTheme() {
-    String themeKey = mapStyles[currentMapStyle] ?? 'default';
-    ThemeService.switchTheme(themeKey);
+    String newThemeKey = mapStyles[currentMapStyle] ?? 'default';
+    String currentThemeKey = ThemeService.currentThemeKey;
+
+    if (newThemeKey != currentThemeKey) {
+      ThemeService.switchTheme(newThemeKey);
+    }
   }
 }

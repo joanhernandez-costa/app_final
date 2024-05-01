@@ -348,7 +348,8 @@ class MapService {
     return currentCameraPosition?.bearing ?? 0;
   }
 
-  void setStyle(MapStyle style) async {
+  void setStyle() async {
+    MapStyle style = MapStyleService.mapStyleFromTime(selectedTime!);
     String styleJson = await MapStyleService.getJsonStyle(style);
     mapController!.setMapStyle(styleJson);
     MapStyleService.updateTheme();

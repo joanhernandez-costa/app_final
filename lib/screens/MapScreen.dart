@@ -55,6 +55,7 @@ class MapScreenState extends State<MapScreen> {
 
     widget.mapService.setSelectedTime(getTimeFromSlider());
     MapStyleService.setMapStyleFromWeather(forecasts![0]);
+    widget.mapService.setStyle();
   }
 
   @override
@@ -211,6 +212,8 @@ class MapScreenState extends State<MapScreen> {
                         sliderValue = value;
                         DateTime selectedTime = getTimeFromSlider();
                         widget.mapService.setSelectedTime(selectedTime);
+                        widget.mapService.setStyle();
+                        print(MapStyleService.currentMapStyle.toString());
                         if (widget.mapService.currentCameraPosition!.zoom >
                             15) {
                           widget.mapService.loadPolygons();

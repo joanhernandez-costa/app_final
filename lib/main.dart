@@ -3,6 +3,7 @@ import 'package:app_final/models/WeatherData.dart';
 import 'package:app_final/screens/HomeScreen.dart';
 import 'package:app_final/services/ApiService.dart';
 import 'package:app_final/services/LocationService.dart';
+import 'package:app_final/services/MapService/MapStyleService.dart';
 import 'package:app_final/services/NavigationService.dart';
 import 'package:app_final/services/StorageService.dart';
 import 'package:app_final/models/AppUser.dart';
@@ -24,7 +25,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserService.currentUser),
-        ChangeNotifierProvider(create: (_) => ThemeService())
+        ChangeNotifierProvider(create: (_) => ThemeService()),
+        ChangeNotifierProvider(create: (_) => MapStyleService())
       ],
       child: MainApp(),
     ),
