@@ -9,7 +9,7 @@ class ShadowCastService {
 
   List<List<LatLng>> calculateIncrementalShadows(
       RestaurantData restaurant, DateTime localTime) {
-    double heightIncrement = 2.0; // Incremento de altura en metros
+    double heightIncrement = 2; // Incremento de altura en metros
     int numberOfLevels = (restaurant.detail.height! / heightIncrement).ceil();
     List<List<LatLng>> allShadows = [];
 
@@ -44,13 +44,17 @@ class ShadowCastService {
     const double metersPerDegreeLatitude = 111000;
 
     for (var basePoint in perimeterPoints) {
+      //print('Dirección de la Sombra en Grados: ${shadowDirection * 180 / pi}');
       double deltaLatitude =
           (shadowLength * cos(shadowDirection)) / metersPerDegreeLatitude;
       double deltaLongitude = (shadowLength * sin(shadowDirection)) /
-          (metersPerDegreeLatitude * cos(basePoint.latitude * pi / 180));
+          (metersPerDegreeLatitude * cos(basePoint.latitude * (pi / 180)));
 
       double shadowPointLatitude = basePoint.latitude + deltaLatitude;
       double shadowPointLongitude = basePoint.longitude + deltaLongitude;
+
+      //print('Delta Latitud: $deltaLatitude');
+      //print('Delta Longitud: $deltaLongitude');
 
       LatLng shadowPoint = LatLng(shadowPointLatitude, shadowPointLongitude);
       shadowPerimeter.add(shadowPoint);
@@ -113,6 +117,11 @@ class ShadowCastService {
   }
 
   double calculateShadowDirection(double solarAzimuth) {
-    return Utils.degreesToRadians(solarAzimuth + 180) % (2 * pi);
+    // Ajustar el azimut solar directamente para reflejar la dirección norte como 0 grados
+    double correctedAzimuth = (solarAzimuth + 180) % 360;
+    // Convertir a radianes y ajustar para que 0 radianes apunte al norte
+    double shadowDirectionRadians =
+        Utils.degreesToRadians((correctedAzimuth + 90) % 360);
+    return shadowDirectionRadians;
   }
 }

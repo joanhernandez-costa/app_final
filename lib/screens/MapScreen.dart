@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:app_final/models/WeatherData.dart';
 import 'package:app_final/services/MapService/MapService.dart';
 import 'package:app_final/services/MapService/MapStyleService.dart';
+import 'package:app_final/services/StorageService.dart';
 import 'package:app_final/services/ThemeService.dart';
 import 'package:app_final/widgets/CustomMapBuilder.dart';
 import 'package:app_final/widgets/CustomSearchWidget.dart';
@@ -48,11 +49,12 @@ class MapScreenState extends State<MapScreen> {
     });
     forecasts = WeatherData.weatherForecasts;
     sunrise = DateTime(2024, 4, 30, 7, 14);
-    sunset = DateTime(2024, 4, 30, 21, 8);
+    sunset = DateTime(2024, 4, 31, 7, 14);
     //sunrise = forecasts![0].sunrise;
     //sunset = forecasts![0].sunset;
     totalDayLength = sunset.difference(sunrise);
 
+    setInitialSliderValue();
     widget.mapService.setSelectedTime(getTimeFromSlider());
     MapStyleService.setMapStyleFromWeather(forecasts![0]);
     widget.mapService.setStyle();
@@ -61,6 +63,7 @@ class MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     compassSubscription?.cancel();
+    StorageService.saveFloat('sliderValue', sliderValue);
     super.dispose();
   }
 
@@ -92,6 +95,10 @@ class MapScreenState extends State<MapScreen> {
     setState(() {
       mapRotation = 0;
     });
+  }
+
+  void setInitialSliderValue() async {
+    sliderValue = await StorageService.loadFloat('sliderValue') ?? 0.0;
   }
 
   String getLabelForValue() {
@@ -213,7 +220,6 @@ class MapScreenState extends State<MapScreen> {
                         DateTime selectedTime = getTimeFromSlider();
                         widget.mapService.setSelectedTime(selectedTime);
                         widget.mapService.setStyle();
-                        print(MapStyleService.currentMapStyle.toString());
                         if (widget.mapService.currentCameraPosition!.zoom >
                             15) {
                           widget.mapService.loadPolygons();

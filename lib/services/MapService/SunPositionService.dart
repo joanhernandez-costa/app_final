@@ -6,15 +6,17 @@ class SunPositionService {
   /// Devuelve el azimut solar en grados para una latitud, longitud y fecha/hora local dados.
   double calculateSolarAzimuth(LatLng position, DateTime localTime) {
     var solarData = SunCalc.getSunPosition(
-        localTime, position.latitude, position.longitude);
-    return solarData['azimuth']! * 180 / pi;
+        localTime.toUtc(), position.latitude, position.longitude);
+    double azimuthInDegrees = solarData['azimuth']! * (180 / pi);
+    return (azimuthInDegrees + 360) % 360;
   }
 
   /// Devuelve la elevación solar en grados para una latitud, longitud y fecha/hora local dados.
   double getSunElevation(LatLng position, DateTime localTime) {
     var solarData = SunCalc.getSunPosition(
-        localTime, position.latitude, position.longitude);
-    return solarData['altitude']! * 180 / pi; // Convertir radianes a grados
+        localTime.toUtc(), position.latitude, position.longitude);
+    double altitudeInDegrees = solarData['altitude']! * (180 / pi);
+    return altitudeInDegrees;
   }
 
   static bool isRestaurantInSunLight(LatLng position, DateTime localTime) {

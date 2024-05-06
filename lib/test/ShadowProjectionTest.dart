@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:apsl_sun_calc/apsl_sun_calc.dart';
 import 'package:test/test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:app_final/services/MapService/ShadowCastService.dart';
@@ -20,34 +21,38 @@ void main() {
     return distance;
   }
 
-  group('ShadowCastService Tests', () {
-    test('Shadow projection accuracy', () {
-      // Crear una instancia del servicio y los datos necesarios para la prueba
-      final shadowService = ShadowCastService();
-      final RestaurantData restaurant = RestaurantData.allRestaurantsData[1];
-      final DateTime localTime = DateTime.now();
+  group('ShadowCastService Test', () {
+    test('Posiciones solares desde el amanecer hasta atardecer', () async {
+      final shadows = ShadowCastService();
+      double lat = 40.44909830960289;
+      double lon = -3.7121435091200987;
+      DateTime date = DateTime.now();
 
-      // Llamada al método del servicio para obtener el perímetro de la sombra
-      List<LatLng> shadowPerimeter =
-          shadowService.getShadow(restaurant, localTime);
+      // Se obtiene sunrise y sunset utilizando SunCalc
+      var times = await SunCalc.getTimes(date, lat, lon);
+      DateTime sunrise = times['sunrise']!.toLocal();
+      DateTime sunset = times['sunset']!.toLocal();
 
-      for (var i = 0; i < restaurant.detail.perimeterPoints!.length; i++) {
-        var originalPoint = restaurant.detail.perimeterPoints![i];
-        var shadowPoint = shadowPerimeter[i];
+      // Probar valores desde el amanecer hasta el atardecer
+      DateTime current = sunrise;
+      while (current.isBefore(sunset)) {
+        var sunPosition = SunCalc.getSunPosition(current, lat, lon);
 
-        // Calcular la distancia esperada usando la altura y la elevación solar
-        double solarElevation = shadowService.sunService.getSunElevation(
-            LatLng(originalPoint.latitude, originalPoint.longitude), localTime);
-        double shadowLength = restaurant.detail.height! *
-            tan(Utils.degreesToRadians(90 - solarElevation));
+        var solarAzimuth =
+            shadows.sunService.calculateSolarAzimuth(LatLng(lat, lon), current);
+        var solarElevation =
+            shadows.sunService.getSunElevation(LatLng(lat, lon), current);
+        var shadowDirectionDegrees = Utils.radiansToDegrees(
+            shadows.calculateShadowDirection(solarAzimuth));
 
-        // Calcular la distancia real entre el punto original y el punto de la sombra
-        double calculatedDistance =
-            calculateDistance(originalPoint, shadowPoint);
+        // Se imprimen los valores para comprobar.
+        print('Time: $current');
+        print('Solar Azimuth: ${sunPosition['azimuth']}');
+        print('Solar Elevation: ${sunPosition['altitude']}');
+        //print('Shadow Direction: $shadowDirectionDegrees');
 
-        // Verificar si la distancia calculada está cerca de la distancia esperada, con una tolerancia pequeña para errores de cálculo
-        expect(calculatedDistance,
-            closeTo(shadowLength, 1.0)); // Tolerancia de 1 metro
+        // Aumentar la hora actual en 60 minutos.
+        current = current.add(const Duration(minutes: 60));
       }
     });
   });

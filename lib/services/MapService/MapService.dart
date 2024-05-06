@@ -228,26 +228,14 @@ class MapService {
   void updateShadows() async {
     if (mapController == null) return;
 
-    polygons.removeWhere(
-        (polygon) => polygon.polygonId.value.startsWith('shadow_'));
+    polygons.clear();
 
     for (var restaurant in RestaurantData.allRestaurantsData) {
       LatLng position =
           LatLng(restaurant.data.latitude, restaurant.data.longitude);
       if (visibleRegion?.contains(position) ?? false) {
-        List<LatLng> shadowPerimeter =
-            shadowService.getShadow(restaurant, selectedTime!);
-        Polygon shadowPolygon = Polygon(
-          polygonId: PolygonId('shadow_${restaurant.data.id}'),
-          points: shadowPerimeter,
-          fillColor: ThemeService.currentTheme.secondary.withOpacity(0.3),
-          strokeColor: Colors.black,
-          strokeWidth: 2,
-          zIndex: 1,
-          geodesic: true,
-        );
         polygons
-          ..add(shadowPolygon)
+          ..add(drawShadowPolygon(restaurant, selectedTime!))
           ..add(drawPerimeterPolygon(restaurant));
       }
     }

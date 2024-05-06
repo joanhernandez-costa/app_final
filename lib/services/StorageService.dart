@@ -1,14 +1,14 @@
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class StorageService {
-  
   static SharedPreferences? _prefs;
-  static Future<SharedPreferences> get _preferences async => _prefs ??= await SharedPreferences.getInstance();
+  static Future<SharedPreferences> get _preferences async =>
+      _prefs ??= await SharedPreferences.getInstance();
 
   // Guarda en preferencias un objeto genérico (Debe tener obligatoriamente un método toJson implementado).
-  static Future<void> saveGeneric<T>(String key, T object, Map<String, dynamic> Function(T object) toJson) async {
+  static Future<void> saveGeneric<T>(String key, T object,
+      Map<String, dynamic> Function(T object) toJson) async {
     final SharedPreferences prefs = await _preferences;
     String jsonString = json.encode(toJson(object));
     await prefs.setString(key, jsonString);
@@ -44,11 +44,21 @@ class StorageService {
     return prefs.getString(key) ?? 'false';
   }
 
+  // Guarda un valor float en preferencias
+  static Future<bool> saveFloat(String key, double value) async {
+    final SharedPreferences prefs = await _preferences;
+    return await prefs.setDouble(key, value);
+  }
+
+  // Carga un valor float desde preferencias
+  static Future<double?> loadFloat(String key) async {
+    final SharedPreferences prefs = await _preferences;
+    return prefs.getDouble(key);
+  }
+
   // Borra todo lo que haya almacenado en preferencias.
   static Future<void> resetPreferences() async {
     final SharedPreferences prefs = await _preferences;
     await prefs.clear();
   }
 }
-
-
