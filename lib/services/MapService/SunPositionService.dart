@@ -19,6 +19,18 @@ class SunPositionService {
     return altitudeInDegrees;
   }
 
+  Future<DateTime> getSunrise(LatLng position) async {
+    var times = await SunCalc.getTimes(
+        DateTime.now(), position.latitude, position.longitude);
+    return times['sunrise']!;
+  }
+
+  Future<DateTime> getSunset(LatLng position) async {
+    var times = await SunCalc.getTimes(
+        DateTime.now(), position.latitude, position.longitude);
+    return times['sunset']!;
+  }
+
   static bool isRestaurantInSunLight(LatLng position, DateTime localTime) {
     return true;
   }

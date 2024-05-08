@@ -17,7 +17,7 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.palette),
             onTap: () => showColorThemeDialog(context),
           ),
-          // Futuras configuraciones se pueden agregar aquí
+          // FUTUROS AJUSTES AQUÍ
         ],
       ),
     );

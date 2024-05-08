@@ -44,11 +44,13 @@ class ShadowCastService {
     const double metersPerDegreeLatitude = 111000;
 
     for (var basePoint in perimeterPoints) {
-      //print('Dirección de la Sombra en Grados: ${shadowDirection * 180 / pi}');
       double deltaLatitude =
-          (shadowLength * cos(shadowDirection)) / metersPerDegreeLatitude;
-      double deltaLongitude = (shadowLength * sin(shadowDirection)) /
-          (metersPerDegreeLatitude * cos(basePoint.latitude * (pi / 180)));
+          (shadowLength * cos(Utils.degreesToRadians(shadowDirection))) /
+              metersPerDegreeLatitude;
+      double deltaLongitude =
+          (shadowLength * sin(Utils.degreesToRadians(shadowDirection))) /
+              (metersPerDegreeLatitude *
+                  cos(Utils.degreesToRadians(basePoint.latitude)));
 
       double shadowPointLatitude = basePoint.latitude + deltaLatitude;
       double shadowPointLongitude = basePoint.longitude + deltaLongitude;
@@ -113,15 +115,18 @@ class ShadowCastService {
   }
 
   double calculateShadowLength(double height, double solarElevation) {
-    return height * tan(Utils.degreesToRadians(90 - solarElevation));
+    double solarElevationRadians = Utils.degreesToRadians(solarElevation);
+
+    if (solarElevationRadians == 0) {
+      return double.infinity;
+      // La sombra es 'infinita' cuando la elevación solar es 0.
+    }
+
+    return height / tan(solarElevationRadians);
   }
 
   double calculateShadowDirection(double solarAzimuth) {
-    // Ajustar el azimut solar directamente para reflejar la dirección norte como 0 grados
-    double correctedAzimuth = (solarAzimuth + 180) % 360;
-    // Convertir a radianes y ajustar para que 0 radianes apunte al norte
-    double shadowDirectionRadians =
-        Utils.degreesToRadians((correctedAzimuth + 90) % 360);
-    return shadowDirectionRadians;
+    double shadowDirection = (solarAzimuth - 180) % 360;
+    return shadowDirection;
   }
 }

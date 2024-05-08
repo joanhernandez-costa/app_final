@@ -48,10 +48,10 @@ class MapScreenState extends State<MapScreen> {
       updateCompassDirection();
     });
     forecasts = WeatherData.weatherForecasts;
-    sunrise = DateTime(2024, 4, 30, 7, 14);
-    sunset = DateTime(2024, 4, 31, 7, 14);
-    //sunrise = forecasts![0].sunrise;
-    //sunset = forecasts![0].sunset;
+    //sunrise = DateTime(2024, 4, 30, 7, 14);
+    //sunset = DateTime(2024, 4, 31, 7, 14);
+    sunrise = forecasts![0].sunrise;
+    sunset = forecasts![0].sunset;
     totalDayLength = sunset.difference(sunrise);
 
     setInitialSliderValue();
