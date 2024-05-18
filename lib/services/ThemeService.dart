@@ -64,7 +64,20 @@ class ThemeService with ChangeNotifier {
       textOnSurface: Colors.black,
       textOnError: Colors.white,
     ),
-    //'aubergineTheme': AppTheme(background: ),
+    'aubergineTheme': AppTheme(
+      primary: Color(0xFF5E3A87),
+      primaryVariant: ColorService.changeLightness(Color(0xFF5E3A87), 0.5),
+      secondary: Color(0xFFDE6FA1),
+      secondaryVariant: ColorService.getComplementaryColor(Color(0xFFDE6FA1)),
+      background: Color(0xFF2C1E4E),
+      surface: Color(0xFF443D6D),
+      error: Color(0xFFD32F2F),
+      textOnPrimary: Colors.white,
+      textOnSecondary: Colors.black,
+      textOnBackground: Colors.white,
+      textOnSurface: Colors.white,
+      textOnError: Colors.white,
+    ),
   };
 
   static String currentThemeKey = 'default';

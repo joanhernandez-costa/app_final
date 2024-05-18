@@ -206,7 +206,7 @@ class MapService {
     visibleRegion = await mapController!.getVisibleRegion();
 
     if (zoom! > 15) {
-      loadMarkers();
+      await loadMarkers();
       loadPolygons();
       //loadCircles();
     } else {
@@ -254,22 +254,36 @@ class MapService {
     onPolygonsUpdated(polygons);
   }
 
-  void loadMarkers() async {
-    markers.clear();
+  Future<void> loadMarkers() async {
+    if (mapController == null) return;
 
-    visibleRegion = await mapController?.getVisibleRegion();
-    if (visibleRegion == null) return;
-
-    for (var restaurant in RestaurantData.allRestaurantsData) {
-      LatLng restaurantLocation =
-          LatLng(restaurant.data.latitude, restaurant.data.longitude);
-
-      if (visibleRegion!.contains(restaurantLocation)) {
-        Marker marker = await addPOIMarker(restaurant);
-        markers.add(marker);
-      }
+    // Solo se cargan marcadores si el zoom es mayor de 15
+    var zoom = await mapController?.getZoomLevel();
+    if (zoom == null || zoom <= 15) {
+      removeMarkers();
+      return;
     }
 
+    if (visibleRegion == null) return;
+
+    // Obtener restaurantes dentro de la región visible.
+    List<RestaurantData> visibleRestaurants =
+        RestaurantData.allRestaurantsData.where((restaurant) {
+      LatLng restaurantLocation =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      return visibleRegion!.contains(restaurantLocation);
+    }).toList();
+
+    // Limpiar marcadores actuales.
+    markers.clear();
+
+    // Añadir nuevos marcadores.
+    for (var restaurant in visibleRestaurants) {
+      Marker marker = await addPOIMarker(restaurant);
+      markers.add(marker);
+    }
+
+    // Actualizar marcadores.
     onMarkersUpdated(markers);
   }
 
