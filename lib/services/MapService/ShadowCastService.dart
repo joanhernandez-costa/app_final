@@ -11,6 +11,7 @@ class ShadowCastService {
       RestaurantData restaurant, DateTime localTime) {
     double heightIncrement = 2; // Incremento de altura en metros
     int numberOfLevels = (restaurant.detail.height! / heightIncrement).ceil();
+
     List<List<LatLng>> allShadows = [];
 
     for (int i = 0; i <= numberOfLevels; i++) {
@@ -54,9 +55,6 @@ class ShadowCastService {
 
       double shadowPointLatitude = basePoint.latitude + deltaLatitude;
       double shadowPointLongitude = basePoint.longitude + deltaLongitude;
-
-      //print('Delta Latitud: $deltaLatitude');
-      //print('Delta Longitud: $deltaLongitude');
 
       LatLng shadowPoint = LatLng(shadowPointLatitude, shadowPointLongitude);
       shadowPerimeter.add(shadowPoint);
@@ -126,7 +124,34 @@ class ShadowCastService {
   }
 
   double calculateShadowDirection(double solarAzimuth) {
-    double shadowDirection = (solarAzimuth - 180) % 360;
-    return shadowDirection;
+    /*double shadowDirection = (solarAzimuth - 180) % 360;
+    return shadowDirection;*/
+    return (solarAzimuth + 360) % 360;
+  }
+
+  bool isRestaurantInPolygon(LatLng point, List<LatLng> polygon) {
+    int intersectCount = 0;
+    for (int j = 0; j < polygon.length - 1; j++) {
+      LatLng v1 = polygon[j];
+      LatLng v2 = polygon[j + 1];
+      if ((v1.latitude > point.latitude) != (v2.latitude > point.latitude) &&
+          (point.longitude <
+              (v2.longitude - v1.longitude) *
+                      (point.latitude - v1.latitude) /
+                      (v2.latitude - v1.latitude) +
+                  v1.longitude)) {
+        intersectCount++;
+      }
+    }
+    return (intersectCount % 2) == 1;
+  }
+
+  static bool isRestaurantInSunLight(RestaurantData restaurant,
+      DateTime localTime, ShadowCastService shadowCalculator) {
+    List<LatLng> shadowPolygon =
+        shadowCalculator.getShadow(restaurant, localTime);
+    return !shadowCalculator.isRestaurantInPolygon(
+        LatLng(restaurant.data.latitude, restaurant.data.longitude),
+        shadowPolygon);
   }
 }

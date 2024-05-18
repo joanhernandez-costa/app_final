@@ -69,6 +69,7 @@ class ThemeService with ChangeNotifier {
 
   static String currentThemeKey = 'default';
   static AppTheme get currentTheme => availableThemes[currentThemeKey]!;
+  static double currentFontSize = 24;
 
   static void switchTheme(String themeKey) {
     currentThemeKey = themeKey;
@@ -78,5 +79,9 @@ class ThemeService with ChangeNotifier {
 
   static void notify() {
     ThemeService().notifyListeners();
+  }
+
+  static void setFontSize(double newFontSize) {
+    currentFontSize = newFontSize;
   }
 }

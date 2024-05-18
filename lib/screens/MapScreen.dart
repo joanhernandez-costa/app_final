@@ -48,10 +48,10 @@ class MapScreenState extends State<MapScreen> {
       updateCompassDirection();
     });
     forecasts = WeatherData.weatherForecasts;
-    //sunrise = DateTime(2024, 4, 30, 7, 14);
-    //sunset = DateTime(2024, 4, 31, 7, 14);
-    sunrise = forecasts![0].sunrise;
-    sunset = forecasts![0].sunset;
+    sunrise = DateTime(2024, 4, 30, 7, 14);
+    sunset = DateTime(2024, 4, 30, 21, 23);
+    //sunrise = forecasts![0].sunrise;
+    //sunset = forecasts![0].sunset;
     totalDayLength = sunset.difference(sunrise);
 
     setInitialSliderValue();
@@ -218,12 +218,11 @@ class MapScreenState extends State<MapScreen> {
                       setState(() {
                         sliderValue = value;
                         DateTime selectedTime = getTimeFromSlider();
+
                         widget.mapService.setSelectedTime(selectedTime);
                         widget.mapService.setStyle();
-                        if (widget.mapService.currentCameraPosition!.zoom >
-                            15) {
-                          widget.mapService.loadPolygons();
-                        }
+
+                        widget.mapService.onCameraIdle();
                       });
                     },
                     min: 0.0,

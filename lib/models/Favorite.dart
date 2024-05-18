@@ -1,3 +1,5 @@
+import 'package:app_final/models/RestaurantData.dart';
+
 class Favorite {
   final String favorite_id;
   final String favorite_restaurant_id;
@@ -8,6 +10,8 @@ class Favorite {
     required this.favorite_restaurant_id,
     required this.favorite_user_id,
   });
+
+  static List<RestaurantData> favoriteRestaurants = [];
 
   static Map<String, dynamic> toJson(Favorite favorites) {
     return {

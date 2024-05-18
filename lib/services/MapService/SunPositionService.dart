@@ -30,10 +30,6 @@ class SunPositionService {
         DateTime.now(), position.latitude, position.longitude);
     return times['sunset']!;
   }
-
-  static bool isRestaurantInSunLight(LatLng position, DateTime localTime) {
-    return true;
-  }
 }
 
 /*

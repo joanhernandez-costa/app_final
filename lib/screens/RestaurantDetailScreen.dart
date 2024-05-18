@@ -1,4 +1,5 @@
 import 'package:app_final/models/AppUser.dart';
+import 'package:app_final/models/Favorite.dart';
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/models/Review.dart';
 import 'package:app_final/services/ApiService.dart';
@@ -26,11 +27,13 @@ class RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
   List<UserReview> userReviews = [];
   final TextEditingController commentController = TextEditingController();
   int currentUserRating = 0;
+  bool isFavorite = false;
 
   @override
   void initState() {
     super.initState();
     loadRestaurantData();
+    checkIfFavorite();
   }
 
   void loadRestaurantData() async {
@@ -38,12 +41,34 @@ class RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     print(restaurantRating.toString());
     List<UserReview>? reviews =
         await ApiService.getUserReviews(widget.restaurant.data.id);
+    await ApiService.getFavoriteRestaurants(UserService.currentUser.value!.id!);
 
     setState(() {
       if (reviews != null) {
         userReviews = reviews;
       }
     });
+  }
+
+  void checkIfFavorite() {
+    setState(() {
+      isFavorite = Favorite.favoriteRestaurants.contains(widget.restaurant);
+    });
+  }
+
+  void toggleFavorite() async {
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+
+    Favorite favorite = Favorite(
+        favorite_id: const Uuid().v4(),
+        favorite_restaurant_id: widget.restaurant.data.id,
+        favorite_user_id: UserService.currentUser.value!.id!);
+
+    if (isFavorite) {
+      await ApiService.postItem(favorite, toJson: Favorite.toJson);
+    }
   }
 
   @override
@@ -61,6 +86,14 @@ class RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             fontSize: 24.0,
           ),
         ),
+        actions: [
+          IconButton(
+              onPressed: toggleFavorite,
+              icon: Icon(
+                isFavorite ? Icons.star : Icons.star_border,
+                color: isFavorite ? Colors.yellow : Colors.white,
+              ))
+        ],
       ),
       body: Center(
         child: SingleChildScrollView(

@@ -1,3 +1,4 @@
+import 'package:app_final/models/Favorite.dart';
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/screens/RestaurantDetailScreen.dart';
 import 'package:app_final/services/ApiService.dart';
@@ -23,12 +24,11 @@ class FavouritesScreenState extends State<FavouritesScreen> {
   }
 
   void loadFavoriteRestaurantsAndRatings() async {
-    List<RestaurantData> restaurants = await ApiService.getFavoriteRestaurants(
-        UserService.currentUser.value!.id!);
+    await ApiService.getFavoriteRestaurants(UserService.currentUser.value!.id!);
 
     // Actualiza el estado con los nuevos valores
     setState(() {
-      favoriteRestaurants = restaurants;
+      favoriteRestaurants = Favorite.favoriteRestaurants;
     });
   }
 

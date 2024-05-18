@@ -1,10 +1,10 @@
 import 'dart:math';
-
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:app_final/models/RestaurantData.dart';
 import 'package:app_final/services/ColorService.dart';
 import 'package:app_final/services/MapService/MapStyleService.dart';
 import 'package:app_final/services/MapService/ShadowCastService.dart';
-import 'package:app_final/services/MapService/SunPositionService.dart';
 import 'package:app_final/services/ThemeService.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -39,9 +39,9 @@ class MapService {
   }
 
   // Mover el mapa a una nueva posición
-  void move(LatLng newPosition) {
+  Future<void> move(LatLng newPosition) async {
     mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(newPosition, 16),
+      CameraUpdate.newLatLngZoom(newPosition, 18),
     );
   }
 
@@ -126,23 +126,71 @@ class MapService {
     );
   }
 
+  Future<Uint8List> createCustomMarkerBitmap(
+      IconData icon, Color color, Color backgroundColor, int size) async {
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    final double iconSize = size.toDouble();
+    const double padding = 15.0;
+    final double circleRadius = iconSize / 2 + padding;
+
+    final double canvasSize = iconSize + padding * 2;
+
+    final Paint paint = Paint()..color = backgroundColor;
+    canvas.drawCircle(
+        Offset(canvasSize / 2, canvasSize / 2), circleRadius, paint);
+
+    final TextPainter textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    )
+      ..text = TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontSize: iconSize,
+          fontFamily: icon.fontFamily,
+          color: color,
+        ),
+      )
+      ..layout();
+
+    final double iconOffset = (canvasSize - textPainter.width) / 2;
+    textPainter.paint(canvas, Offset(iconOffset, iconOffset));
+    final img = await pictureRecorder
+        .endRecording()
+        .toImage(canvasSize.toInt(), canvasSize.toInt());
+    final ByteData? byteData =
+        await img.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
+  }
+
   // Agregar un marcador de Punto de Interés (POI)
-  Marker addPOIMarker(RestaurantData restaurant) {
+  Future<Marker> addPOIMarker(RestaurantData restaurant) async {
     LatLng restaurantPosition =
         LatLng(restaurant.data.latitude, restaurant.data.longitude);
-    bool isInSunLight = SunPositionService.isRestaurantInSunLight(
-        restaurantPosition, DateTime.now());
+    bool isInSunLight = ShadowCastService.isRestaurantInSunLight(
+        restaurant, selectedTime!, shadowService);
 
     final String markerIdVal =
         'marker_${restaurant.data.latitude}_${restaurant.data.longitude}';
     final MarkerId markerId = MarkerId(markerIdVal);
 
+    Color iconColor = isInSunLight
+        ? ThemeService.currentTheme.primary
+        : ThemeService.currentTheme.secondary;
+    Color backgroundColor = isInSunLight
+        ? ThemeService.currentTheme.secondary
+        : ThemeService.currentTheme.primary;
+
+    Uint8List iconData = await createCustomMarkerBitmap(
+        isInSunLight ? Icons.wb_sunny : Icons.cloud,
+        iconColor,
+        backgroundColor,
+        100);
+
     final Marker marker = Marker(
         markerId: markerId,
         position: restaurantPosition,
-        icon: BitmapDescriptor.defaultMarkerWithHue(isInSunLight
-            ? BitmapDescriptor.hueOrange
-            : BitmapDescriptor.hueBlue),
+        icon: BitmapDescriptor.fromBytes(iconData),
         onTap: () {
           if (onMarkerTapped != null) {
             onMarkerTapped!(restaurant);
@@ -217,7 +265,7 @@ class MapService {
           LatLng(restaurant.data.latitude, restaurant.data.longitude);
 
       if (visibleRegion!.contains(restaurantLocation)) {
-        Marker marker = addPOIMarker(restaurant);
+        Marker marker = await addPOIMarker(restaurant);
         markers.add(marker);
       }
     }
@@ -297,7 +345,7 @@ class MapService {
     onMarkersUpdated(markers);
   }
 
-  void enable3DView() {
+  Future<void> enable3DView() async {
     mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
