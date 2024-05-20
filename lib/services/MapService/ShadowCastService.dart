@@ -12,19 +12,25 @@ class ShadowCastService {
     double heightIncrement = 2; // Incremento de altura en metros
     int numberOfLevels = (restaurant.detail.height! / heightIncrement).ceil();
 
+    LatLng restaurantPosition =
+        LatLng(restaurant.data.latitude, restaurant.data.longitude);
+    double solarElevation = sunService.getSunElevation(
+      restaurantPosition,
+      localTime,
+    );
+    double solarAzimuth = sunService.calculateSolarAzimuth(
+      restaurantPosition,
+      localTime,
+    );
+    double shadowDirection = calculateShadowDirection(solarAzimuth);
+
     List<List<LatLng>> allShadows = [];
 
     for (int i = 0; i <= numberOfLevels; i++) {
       double currentHeight = i * heightIncrement;
-      double solarElevation = sunService.getSunElevation(
-          LatLng(restaurant.data.latitude, restaurant.data.longitude),
-          localTime);
-      double solarAzimuth = sunService.calculateSolarAzimuth(
-          LatLng(restaurant.data.latitude, restaurant.data.longitude),
-          localTime);
       double shadowLength =
           calculateShadowLength(currentHeight, solarElevation);
-      double shadowDirection = calculateShadowDirection(solarAzimuth);
+
       List<LatLng> levelShadow = calculateShadowProjection(
           restaurant.detail.perimeterPoints!, shadowLength, shadowDirection);
       allShadows.add(levelShadow);
@@ -43,15 +49,14 @@ class ShadowCastService {
       double shadowLength, double shadowDirection) {
     List<LatLng> shadowPerimeter = [];
     const double metersPerDegreeLatitude = 111000;
+    double directionInRadians = Utils.degreesToRadians(shadowDirection);
 
     for (var basePoint in perimeterPoints) {
       double deltaLatitude =
-          (shadowLength * cos(Utils.degreesToRadians(shadowDirection))) /
-              metersPerDegreeLatitude;
-      double deltaLongitude =
-          (shadowLength * sin(Utils.degreesToRadians(shadowDirection))) /
-              (metersPerDegreeLatitude *
-                  cos(Utils.degreesToRadians(basePoint.latitude)));
+          (shadowLength * cos(directionInRadians)) / metersPerDegreeLatitude;
+      double deltaLongitude = (shadowLength * sin(directionInRadians)) /
+          (metersPerDegreeLatitude *
+              cos(Utils.degreesToRadians(basePoint.latitude)));
 
       double shadowPointLatitude = basePoint.latitude + deltaLatitude;
       double shadowPointLongitude = basePoint.longitude + deltaLongitude;
@@ -146,11 +151,9 @@ class ShadowCastService {
     return (intersectCount % 2) == 1;
   }
 
-  static bool isRestaurantInSunLight(RestaurantData restaurant,
-      DateTime localTime, ShadowCastService shadowCalculator) {
-    List<LatLng> shadowPolygon =
-        shadowCalculator.getShadow(restaurant, localTime);
-    return !shadowCalculator.isRestaurantInPolygon(
+  bool isRestaurantInSunLight(RestaurantData restaurant, DateTime localTime) {
+    List<LatLng> shadowPolygon = getShadow(restaurant, localTime);
+    return !isRestaurantInPolygon(
         LatLng(restaurant.data.latitude, restaurant.data.longitude),
         shadowPolygon);
   }

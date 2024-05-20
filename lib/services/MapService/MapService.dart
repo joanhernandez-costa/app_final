@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -19,6 +20,7 @@ class MapService {
   DateTime? selectedTime;
   Set<Marker> markers = <Marker>{};
   Set<Polygon> polygons = <Polygon>{};
+  Map<String, bool> markerSunlightStatus = {};
 
   Function(Set<Marker>) onMarkersUpdated;
   Function(Set<Polygon>) onPolygonsUpdated;
@@ -43,6 +45,207 @@ class MapService {
     mapController?.animateCamera(
       CameraUpdate.newLatLngZoom(newPosition, 18),
     );
+  }
+
+  Future<void> onCameraIdle() async {
+    if (mapController == null) return;
+    // Obtiene el zoom del mapa
+    var zoom = await mapController?.getZoomLevel();
+    visibleRegion = await mapController!.getVisibleRegion();
+
+    if (zoom! > 15) {
+      await updateVisibleMarkers();
+      await loadPolygons();
+      //await loadIncrementalShadows();
+      //loadCircles();
+    } else {
+      // Eliminar los marcadores si el zoom es demasiado bajo
+      removeMarkers();
+      removePolygons();
+    }
+  }
+
+  Future<void> updateVisibleMarkers() async {
+    if (mapController == null || visibleRegion == null) return;
+
+    Set<Marker> newMarkers = {};
+
+    List<RestaurantData> visibleRestaurants =
+        RestaurantData.allRestaurantsData.where((restaurant) {
+      LatLng restaurantLocation =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      return visibleRegion!.contains(restaurantLocation);
+    }).toList();
+
+    for (var restaurant in visibleRestaurants) {
+      String markerIdVal =
+          'marker_${restaurant.data.latitude}_${restaurant.data.longitude}';
+      bool isInSunLight =
+          shadowService.isRestaurantInSunLight(restaurant, selectedTime!);
+
+      // Solo se actualiza el marcador si el estado de sombra o sol ha cambiado.
+      if (markerSunlightStatus[markerIdVal] != isInSunLight) {
+        Marker marker = await addPOIMarker(restaurant);
+        newMarkers.add(marker);
+      } else {
+        // Si no ha cambiado el estado, se mantiene el marcador.
+        Marker existingMarker = markers
+            .firstWhere((marker) => marker.markerId.value == markerIdVal);
+        newMarkers.add(existingMarker);
+      }
+    }
+    markers = newMarkers;
+    onMarkersUpdated(markers);
+  }
+
+  // Agregar un marcador de Punto de Interés (POI)
+  Future<Marker> addPOIMarker(RestaurantData restaurant) async {
+    LatLng restaurantPosition =
+        LatLng(restaurant.data.latitude, restaurant.data.longitude);
+    bool isInSunLight =
+        shadowService.isRestaurantInSunLight(restaurant, selectedTime!);
+
+    final String markerIdVal =
+        'marker_${restaurant.data.latitude}_${restaurant.data.longitude}';
+    final MarkerId markerId = MarkerId(markerIdVal);
+
+    Color iconColor = isInSunLight
+        ? ThemeService.currentTheme.primary
+        : ThemeService.currentTheme.secondary;
+    Color backgroundColor = isInSunLight
+        ? ThemeService.currentTheme.secondary
+        : ThemeService.currentTheme.primary;
+    IconData icon = isInSunLight ? Icons.wb_sunny : Icons.cloud;
+
+    Uint8List iconData =
+        await createCustomMarkerBitmap(icon, iconColor, backgroundColor, 100);
+
+    final Marker marker = Marker(
+        markerId: markerId,
+        position: restaurantPosition,
+        icon: BitmapDescriptor.fromBytes(iconData),
+        onTap: () {
+          if (onMarkerTapped != null) {
+            onMarkerTapped!(restaurant);
+          }
+        });
+
+    markerSunlightStatus[markerIdVal] = isInSunLight;
+
+    return marker;
+  }
+
+  Future<Uint8List> createCustomMarkerBitmap(
+      IconData icon, Color color, Color backgroundColor, int size) async {
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    final double iconSize = size.toDouble();
+    const double padding = 15.0;
+    final double circleRadius = iconSize / 2 + padding;
+
+    final double canvasSize = iconSize + padding * 2;
+
+    final Paint paint = Paint()..color = backgroundColor;
+    canvas.drawCircle(
+        Offset(canvasSize / 2, canvasSize / 2), circleRadius, paint);
+
+    final TextPainter textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    )
+      ..text = TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontSize: iconSize,
+          fontFamily: icon.fontFamily,
+          color: color,
+        ),
+      )
+      ..layout();
+
+    final double iconOffset = (canvasSize - textPainter.width) / 2;
+    textPainter.paint(canvas, Offset(iconOffset, iconOffset));
+    final img = await pictureRecorder
+        .endRecording()
+        .toImage(canvasSize.toInt(), canvasSize.toInt());
+    final ByteData? byteData =
+        await img.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
+  }
+
+  Future<void> loadPolygons() async {
+    if (mapController == null) return;
+
+    polygons.clear();
+
+    for (var restaurant in RestaurantData.allRestaurantsData) {
+      LatLng position =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      if (visibleRegion?.contains(position) ?? false) {
+        polygons
+          ..add(drawShadowPolygon(restaurant, selectedTime!))
+          ..add(drawPerimeterPolygon(restaurant));
+      }
+    }
+
+    onPolygonsUpdated(polygons);
+  }
+
+  //Crea un polígono para mostrarlo en el mapa
+  Polygon drawShadowPolygon(RestaurantData restaurant, DateTime time) {
+    List<LatLng> shadowPerimeter = shadowService.getShadow(restaurant, time);
+    //shadowPerimeter.add(shadowPerimeter.first);
+
+    return Polygon(
+      polygonId: PolygonId('shadow_${restaurant.data.id}_$time'),
+      points: shadowPerimeter,
+      fillColor: ThemeService.currentTheme.secondary.withOpacity(0.3),
+      strokeColor: Colors.black,
+      strokeWidth: 2,
+      zIndex: 1,
+      geodesic: true,
+    );
+  }
+
+  Polygon drawPerimeterPolygon(RestaurantData restaurant) {
+    return Polygon(
+      polygonId: PolygonId('perimeter_${restaurant.data.id}'),
+      points: restaurant.detail.perimeterPoints!,
+      fillColor: ThemeService.currentTheme.primary.withOpacity(0.5),
+      strokeColor: Colors.black,
+      strokeWidth: 2,
+      zIndex: 1,
+    );
+  }
+
+  Future<void> loadIncrementalShadows() async {
+    if (mapController == null) return;
+
+    polygons.clear();
+
+    for (var restaurant in RestaurantData.allRestaurantsData) {
+      LatLng position =
+          LatLng(restaurant.data.latitude, restaurant.data.longitude);
+      if (visibleRegion?.contains(position) ?? false) {
+        List<List<LatLng>> shadows = ShadowCastService()
+            .calculateIncrementalShadows(restaurant, selectedTime!);
+        for (int i = 0; i < shadows.length; i++) {
+          Polygon shadowPolygon = Polygon(
+            polygonId: PolygonId('shadow_${restaurant.data.id}_level_$i'),
+            points: shadows[i],
+            fillColor: ThemeService.currentTheme.secondary
+                .withOpacity(0.1 + (0.8 / shadows.length * i)),
+            strokeColor: Colors.black,
+            strokeWidth: 2,
+            zIndex: 1,
+            geodesic: true,
+          );
+          polygons.add(shadowPolygon);
+        }
+        polygons.add(drawPerimeterPolygon(restaurant));
+      }
+    }
+
+    onPolygonsUpdated(polygons);
   }
 
   // Función para crear un cuadrado en el mapa
@@ -99,124 +302,7 @@ class MapService {
     return circle;
   }
 
-  //Crea un polígono para mostrarlo en el mapa
-  Polygon drawShadowPolygon(RestaurantData restaurant, DateTime time) {
-    List<LatLng> shadowPerimeter = shadowService.getShadow(restaurant, time);
-    shadowPerimeter.add(shadowPerimeter.first);
-
-    return Polygon(
-      polygonId: PolygonId('shadow_${restaurant.data.id}_$time'),
-      points: shadowPerimeter,
-      fillColor: ThemeService.currentTheme.secondary.withOpacity(0.3),
-      strokeColor: Colors.black,
-      strokeWidth: 2,
-      zIndex: 1,
-      geodesic: true,
-    );
-  }
-
-  Polygon drawPerimeterPolygon(RestaurantData restaurant) {
-    return Polygon(
-      polygonId: PolygonId('perimeter_${restaurant.data.id}'),
-      points: restaurant.detail.perimeterPoints!,
-      fillColor: ThemeService.currentTheme.primary.withOpacity(0.5),
-      strokeColor: Colors.black,
-      strokeWidth: 2,
-      zIndex: 1,
-    );
-  }
-
-  Future<Uint8List> createCustomMarkerBitmap(
-      IconData icon, Color color, Color backgroundColor, int size) async {
-    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-    final Canvas canvas = Canvas(pictureRecorder);
-    final double iconSize = size.toDouble();
-    const double padding = 15.0;
-    final double circleRadius = iconSize / 2 + padding;
-
-    final double canvasSize = iconSize + padding * 2;
-
-    final Paint paint = Paint()..color = backgroundColor;
-    canvas.drawCircle(
-        Offset(canvasSize / 2, canvasSize / 2), circleRadius, paint);
-
-    final TextPainter textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    )
-      ..text = TextSpan(
-        text: String.fromCharCode(icon.codePoint),
-        style: TextStyle(
-          fontSize: iconSize,
-          fontFamily: icon.fontFamily,
-          color: color,
-        ),
-      )
-      ..layout();
-
-    final double iconOffset = (canvasSize - textPainter.width) / 2;
-    textPainter.paint(canvas, Offset(iconOffset, iconOffset));
-    final img = await pictureRecorder
-        .endRecording()
-        .toImage(canvasSize.toInt(), canvasSize.toInt());
-    final ByteData? byteData =
-        await img.toByteData(format: ui.ImageByteFormat.png);
-    return byteData!.buffer.asUint8List();
-  }
-
-  // Agregar un marcador de Punto de Interés (POI)
-  Future<Marker> addPOIMarker(RestaurantData restaurant) async {
-    LatLng restaurantPosition =
-        LatLng(restaurant.data.latitude, restaurant.data.longitude);
-    bool isInSunLight = ShadowCastService.isRestaurantInSunLight(
-        restaurant, selectedTime!, shadowService);
-
-    final String markerIdVal =
-        'marker_${restaurant.data.latitude}_${restaurant.data.longitude}';
-    final MarkerId markerId = MarkerId(markerIdVal);
-
-    Color iconColor = isInSunLight
-        ? ThemeService.currentTheme.primary
-        : ThemeService.currentTheme.secondary;
-    Color backgroundColor = isInSunLight
-        ? ThemeService.currentTheme.secondary
-        : ThemeService.currentTheme.primary;
-
-    Uint8List iconData = await createCustomMarkerBitmap(
-        isInSunLight ? Icons.wb_sunny : Icons.cloud,
-        iconColor,
-        backgroundColor,
-        100);
-
-    final Marker marker = Marker(
-        markerId: markerId,
-        position: restaurantPosition,
-        icon: BitmapDescriptor.fromBytes(iconData),
-        onTap: () {
-          if (onMarkerTapped != null) {
-            onMarkerTapped!(restaurant);
-          }
-        });
-
-    return marker;
-  }
-
-  void onCameraIdle() async {
-    // Obtiene el zoom del mapa
-    var zoom = await mapController?.getZoomLevel();
-    visibleRegion = await mapController!.getVisibleRegion();
-
-    if (zoom! > 15) {
-      await loadMarkers();
-      loadPolygons();
-      //loadCircles();
-    } else {
-      // Eliminar los marcadores si el zoom es demasiado bajo
-      removeMarkers();
-      removePolygons();
-    }
-  }
-
-  void loadCircles() async {
+  Future<void> loadCircles() async {
     if (mapController == null) return;
 
     visibleRegion = await mapController!.getVisibleRegion();
@@ -241,108 +327,6 @@ class MapService {
       }
     }
     onCirclesUpdated(circles);
-  }
-
-  void loadPolygons() async {
-    if (mapController == null) return;
-
-    LatLngBounds visibleRegion = await mapController!.getVisibleRegion();
-    this.visibleRegion = visibleRegion;
-
-    updateShadows();
-    //updateIncrementalShadows();
-    onPolygonsUpdated(polygons);
-  }
-
-  Future<void> loadMarkers() async {
-    if (mapController == null) return;
-
-    // Solo se cargan marcadores si el zoom es mayor de 15
-    var zoom = await mapController?.getZoomLevel();
-    if (zoom == null || zoom <= 15) {
-      removeMarkers();
-      return;
-    }
-
-    if (visibleRegion == null) return;
-
-    // Obtener restaurantes dentro de la región visible.
-    List<RestaurantData> visibleRestaurants =
-        RestaurantData.allRestaurantsData.where((restaurant) {
-      LatLng restaurantLocation =
-          LatLng(restaurant.data.latitude, restaurant.data.longitude);
-      return visibleRegion!.contains(restaurantLocation);
-    }).toList();
-
-    // Limpiar marcadores actuales.
-    markers.clear();
-
-    // Añadir nuevos marcadores.
-    for (var restaurant in visibleRestaurants) {
-      Marker marker = await addPOIMarker(restaurant);
-      markers.add(marker);
-    }
-
-    // Actualizar marcadores.
-    onMarkersUpdated(markers);
-  }
-
-  void updateShadows() async {
-    if (mapController == null) return;
-
-    polygons.clear();
-
-    for (var restaurant in RestaurantData.allRestaurantsData) {
-      LatLng position =
-          LatLng(restaurant.data.latitude, restaurant.data.longitude);
-      if (visibleRegion?.contains(position) ?? false) {
-        polygons
-          ..add(drawShadowPolygon(restaurant, selectedTime!))
-          ..add(drawPerimeterPolygon(restaurant));
-      }
-    }
-
-    onPolygonsUpdated(polygons);
-  }
-
-  void updateIncrementalShadows() async {
-    if (mapController == null) return;
-
-    visibleRegion = await mapController!.getVisibleRegion();
-    Set<Polygon> newShadows = {};
-
-    polygons.removeWhere(
-        (polygon) => polygon.polygonId.value.startsWith('shadow_'));
-
-    for (var restaurant in RestaurantData.allRestaurantsData) {
-      LatLng position =
-          LatLng(restaurant.data.latitude, restaurant.data.longitude);
-      if (visibleRegion!.contains(position) &&
-          restaurant.detail.perimeterPoints != null) {
-        List<List<LatLng>> shadows = shadowService.calculateIncrementalShadows(
-            restaurant, selectedTime!);
-        for (int i = 0; i < shadows.length; i++) {
-          Polygon shadowPolygon = Polygon(
-            polygonId: PolygonId('shadow_${restaurant.data.id}_level_$i'),
-            points: shadows[i],
-            fillColor: ThemeService.currentTheme.secondary
-                .withOpacity(0.1 + (0.8 / shadows.length * i)),
-            strokeColor: Colors.black,
-            strokeWidth: 2,
-            zIndex: 1,
-            geodesic: true,
-          );
-          newShadows.add(shadowPolygon);
-        }
-
-        polygons
-          ..addAll(newShadows)
-          ..add(drawPerimeterPolygon(restaurant));
-        newShadows.clear();
-      }
-    }
-
-    onPolygonsUpdated(polygons);
   }
 
   void setSelectedTime(DateTime selectedTime) {
@@ -373,7 +357,7 @@ class MapService {
   }
 
   // Deshabilitar la vista en 3D y volver a la vista normal
-  void disable3DView() {
+  Future<void> disable3DView() async {
     mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
@@ -386,11 +370,11 @@ class MapService {
     );
   }
 
-  void toggle3DView() {
+  Future<void> toggle3DView() async {
     if (currentCameraPosition?.tilt == 0) {
-      enable3DView();
+      await enable3DView();
     } else {
-      disable3DView();
+      await disable3DView();
     }
   }
 
@@ -398,7 +382,7 @@ class MapService {
     return currentCameraPosition?.bearing ?? 0;
   }
 
-  void setStyle() async {
+  Future<void> setStyle() async {
     MapStyle style = MapStyleService.mapStyleFromTime(selectedTime!);
     String styleJson = await MapStyleService.getJsonStyle(style);
     mapController!.setMapStyle(styleJson);
