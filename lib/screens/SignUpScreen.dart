@@ -32,7 +32,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscureText = true;
 
   String _profileImageUrl =
-      'https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/sign/logo/Recurso%2090.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJsb2dvL1JlY3Vyc28gOTAucG5nIiwiaWF0IjoxNzA5MDU1NTA0LCJleHAiOjE3NDA1OTE1MDR9.6WZK6dxPkpfkfpsrBrski443OFO1U65WnoPofzCLhvo&t=2024-02-27T17%3A38%3A28.313Z';
+      'https://nkmqlnfejowcintlfspl.supabase.co/storage/v1/object/sign/logo/logo_recortado.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJsb2dvL2xvZ29fcmVjb3J0YWRvLnBuZyIsImlhdCI6MTcxMTg5NDAzMSwiZXhwIjoxNzQzNDMwMDMxfQ.tf5MpdHsO82hWhY_cb6YWIOVfxklA19lIRDVC4esQlY&t=2024-03-31T14%3A07%3A14.453Z';
 
   Future<void> _pickImage() async {
     var url = await MediaService.pickImage() ?? _profileImageUrl;

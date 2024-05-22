@@ -3,6 +3,7 @@ import 'package:app_final/screens/FavouritesScreen.dart';
 import 'package:app_final/screens/MapScreen.dart';
 import 'package:app_final/screens/ProfileScreen.dart';
 import 'package:app_final/screens/SettingsScreen.dart';
+import 'package:app_final/screens/WeatherScreen.dart';
 import 'package:app_final/services/MapService/MapService.dart';
 import 'package:app_final/services/NavigationService.dart';
 import 'package:app_final/services/ThemeService.dart';
@@ -46,6 +47,8 @@ class HomeScreenState extends State<HomeScreen> {
         return const FavouritesScreen();
       case 2:
         return const ProfileScreen();
+      case 3:
+        return WeatherScreen();
       default:
         return MapScreen(mapService: mapService);
     }
@@ -89,7 +92,6 @@ class HomeScreenState extends State<HomeScreen> {
       ),
       body: buildScreen(),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: ThemeService.currentTheme.secondary,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
@@ -103,9 +105,15 @@ class HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.person),
             label: 'Perfil',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.cloud),
+            label: 'Tiempo',
+          ),
         ],
         currentIndex: selectedIndex,
         selectedItemColor: ThemeService.currentTheme.primary,
+        unselectedItemColor: ThemeService.currentTheme.secondary,
+        showUnselectedLabels: true,
         onTap: onItemTapped,
       ),
     );

@@ -81,10 +81,6 @@ class CustomMapBuilderState extends State<CustomMapBuilder> {
         onCameraIdle: () {
           widget.mapService.onCameraIdle();
         },
-        onTap: (argument) {
-          print(
-              'Se ha pulsado sobre: ${argument.latitude}, ${argument.longitude}');
-        },
       ),
     );
   }

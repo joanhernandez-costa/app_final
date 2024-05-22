@@ -7,6 +7,11 @@ class WeatherData {
   final LatLng location;
   final String weatherDescription;
   final double temperature;
+  final double feelsLike;
+  final int pressure;
+  final int humidity;
+  final double windSpeed;
+  final int windDeg;
   final DateTime sunrise;
   final DateTime sunset;
   final String weatherIconId;
@@ -18,6 +23,11 @@ class WeatherData {
     required this.location,
     required this.weatherDescription,
     required this.temperature,
+    required this.feelsLike,
+    required this.pressure,
+    required this.humidity,
+    required this.windSpeed,
+    required this.windDeg,
     required this.sunrise,
     required this.sunset,
     required this.weatherIconId,
@@ -44,6 +54,11 @@ class WeatherData {
         location: location,
         weatherDescription: weatherInfo['description'],
         temperature: (json['temp']['day'] as num).toDouble(),
+        feelsLike: (json['feels_like']['day'] as num).toDouble(),
+        pressure: json['pressure'],
+        humidity: json['humidity'],
+        windSpeed: (json['wind_speed'] as num).toDouble(),
+        windDeg: json['wind_deg'],
         sunrise: localSunrise,
         sunset: localSunset,
         weatherIconId: weatherInfo['icon'],
@@ -69,14 +84,5 @@ class WeatherData {
 
   String getIconUrl() {
     return 'https://openweathermap.org/img/wn/$weatherIconId.png';
-  }
-
-  static void debug(Map<String, dynamic> json) {
-    var madrid = tz.getLocation('Europe/Madrid');
-    print(
-        'Hora del amanecer: ${json['sunrise']} --> ${tz.TZDateTime.fromMillisecondsSinceEpoch(madrid, json['sunrise'] * 1000)}');
-
-    print(
-        'Hora del atardecer: ${json['sunset']} --> ${tz.TZDateTime.fromMillisecondsSinceEpoch(madrid, json['sunset'] * 1000)}');
   }
 }

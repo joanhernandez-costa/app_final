@@ -12,7 +12,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool notificationEnabled = true;
   int shadowPrecision = 5;
-  double accessibilityFontSize = 100;
+  double accessibilityFontSize = 50;
   bool locationPermissionGranted = true;
 
   List<Color> primaryColors = [
@@ -35,8 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         children: <Widget>[
           ListTile(
-            title: const Text('Paleta de Colores'),
-            trailing: Row(
+            title: const Text(
+              'Paleta de Colores',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            trailing: Wrap(
+              spacing: 5,
               children: primaryColors.map((color) {
                 return Container(
                   width: 24,
@@ -49,7 +53,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => showColorThemeDialog(context),
           ),
           ListTile(
-            title: const Text('Permisos de ubicación'),
+            title: const Text(
+              'Permisos de ubicación',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             trailing: Icon(
               locationPermissionGranted
                   ? Icons.location_on
@@ -61,17 +68,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => showLocationPermissionDialog(context),
           ),
           ListTile(
-            title: const Text('Precisión del sombreado'),
-            subtitle: Text(shadowPrecision.toString()),
+            title: const Text(
+              'Precisión del sombreado',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            trailing: Text(
+              shadowPrecision.toString(),
+              style: const TextStyle(fontSize: 18),
+            ),
             onTap: () => showShadowPrecisionDialog(context),
           ),
           ListTile(
-            title: const Text('Ajustes de accesibilidad'),
-            subtitle: Text('${accessibilityFontSize}%'),
+            title: const Text(
+              'Ajustes de accesibilidad',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            trailing: Text(
+              '$accessibilityFontSize%',
+              style: const TextStyle(fontSize: 18),
+            ),
             onTap: () => showAccessibilitySettingsDialog(context),
           ),
           SwitchListTile(
-            title: const Text('Activar notificaciones'),
+            title: const Text(
+              'Activar notificaciones',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             value: notificationEnabled,
             onChanged: (value) {
               setState(() {

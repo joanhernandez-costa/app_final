@@ -15,7 +15,7 @@ class ThemeService with ChangeNotifier {
   static const Color baseTextOnPrimary = Color.fromRGBO(237, 231, 227, 1);
   static const Color baseTextOnSecondary = Color.fromARGB(255, 0, 0, 0);
   static const Color baseTextOnBackground = Color.fromARGB(255, 54, 54, 54);
-  static const Color baseTextOnSurface = Color(0xFF000000);
+  static const Color baseTextOnSurface = Color.fromARGB(255, 255, 255, 255);
   static const Color baseTextOnError = Color(0xFFFFFFFF);
 
   static final Map<String, AppTheme> availableThemes = {
@@ -80,6 +80,7 @@ class ThemeService with ChangeNotifier {
     ),
   };
 
+  static List<Color> currentPrimaryColors = [];
   static String currentThemeKey = 'default';
   static AppTheme get currentTheme => availableThemes[currentThemeKey]!;
   static double currentFontSize = 24;

@@ -103,46 +103,53 @@ class _LocationPermissionDialogState extends State<LocationPermissionDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           locationServiceEnabled
-              ? Icon(Icons.location_on, color: Theme.of(context).primaryColor)
-              : Icon(Icons.location_off, color: Theme.of(context).errorColor),
-          SizedBox(height: 16),
+              ? Icon(Icons.location_on,
+                  color: ThemeService.currentTheme.primary)
+              : Icon(Icons.location_off,
+                  color: ThemeService.currentTheme.secondary),
+          const SizedBox(height: 16),
           Text(
             locationServiceEnabled
                 ? "Los servicios de ubicación están habilitados."
                 : "Los servicios de ubicación están deshabilitados.",
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text("Permiso de ubicación actual: ${permissionStatus.toString()}"),
         ],
       ),
       actions: <Widget>[
-        TextButton(
-          onPressed: () async {
-            permissionStatus = await LocationService.requestPermission();
-            widget.onPermissionChanged(
-                permissionStatus != LocationPermission.denied &&
-                    permissionStatus != LocationPermission.deniedForever);
-            setState(() {});
-          },
-          child: const Text('Solicitar Permiso'),
-        ),
-        TextButton(
-          onPressed: () async {
-            await LocationService.openLocationSettings();
-          },
-          child: const Text('Abrir Configuración de Ubicación'),
-        ),
-        TextButton(
-          onPressed: () async {
-            await LocationService.openAppSettings();
-          },
-          child: const Text('Abrir Configuración de la App'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cerrar'),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton(
+              onPressed: () async {
+                permissionStatus = await LocationService.requestPermission();
+                widget.onPermissionChanged(
+                    permissionStatus != LocationPermission.denied &&
+                        permissionStatus != LocationPermission.deniedForever);
+                setState(() {});
+              },
+              child: const Text('Solicitar Permiso'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await LocationService.openLocationSettings();
+              },
+              child: const Text('Abrir Configuración de Ubicación'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await LocationService.openAppSettings();
+              },
+              child: const Text('Abrir Configuración de la App'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cerrar'),
+            ),
+          ],
         ),
       ],
     );
@@ -221,6 +228,12 @@ class _AccessibilitySettingsDialogState
   void initState() {
     super.initState();
     selectedFontSize = widget.initialFontSize;
+
+    if (selectedFontSize < 0.5) {
+      selectedFontSize = 0.5;
+    } else if (selectedFontSize > 2.0) {
+      selectedFontSize = 2.0;
+    }
   }
 
   @override

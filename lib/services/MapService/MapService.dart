@@ -9,6 +9,7 @@ import 'package:app_final/services/MapService/ShadowCastService.dart';
 import 'package:app_final/services/ThemeService.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:collection/collection.dart';
 
 class MapService {
   GoogleMapController? mapController;
@@ -42,9 +43,7 @@ class MapService {
 
   // Mover el mapa a una nueva posición
   Future<void> move(LatLng newPosition) async {
-    mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(newPosition, 18),
-    );
+    await initShowAnimation(newPosition);
   }
 
   Future<void> onCameraIdle() async {
@@ -89,9 +88,12 @@ class MapService {
         newMarkers.add(marker);
       } else {
         // Si no ha cambiado el estado, se mantiene el marcador.
-        Marker existingMarker = markers
-            .firstWhere((marker) => marker.markerId.value == markerIdVal);
-        newMarkers.add(existingMarker);
+        Marker? existingMarker = markers
+            .firstWhereOrNull((marker) => marker.markerId.value == markerIdVal);
+
+        if (existingMarker != null) {
+          newMarkers.add(existingMarker);
+        }
       }
     }
     markers = newMarkers;
@@ -201,7 +203,7 @@ class MapService {
       fillColor: ThemeService.currentTheme.secondary.withOpacity(0.3),
       strokeColor: Colors.black,
       strokeWidth: 2,
-      zIndex: 1,
+      zIndex: 0,
       geodesic: true,
     );
   }
@@ -220,8 +222,6 @@ class MapService {
   Future<void> loadIncrementalShadows() async {
     if (mapController == null) return;
 
-    polygons.clear();
-
     for (var restaurant in RestaurantData.allRestaurantsData) {
       LatLng position =
           LatLng(restaurant.data.latitude, restaurant.data.longitude);
@@ -234,8 +234,8 @@ class MapService {
             points: shadows[i],
             fillColor: ThemeService.currentTheme.secondary
                 .withOpacity(0.1 + (0.8 / shadows.length * i)),
-            strokeColor: Colors.black,
-            strokeWidth: 2,
+            strokeColor: Colors.black.withOpacity(0.5),
+            strokeWidth: 1,
             zIndex: 1,
             geodesic: true,
           );
@@ -344,7 +344,8 @@ class MapService {
   }
 
   Future<void> enable3DView() async {
-    mapController?.animateCamera(
+    if (currentCameraPosition == null) return;
+    await mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           bearing: currentCameraPosition!.bearing,
@@ -358,7 +359,8 @@ class MapService {
 
   // Deshabilitar la vista en 3D y volver a la vista normal
   Future<void> disable3DView() async {
-    mapController?.animateCamera(
+    if (currentCameraPosition == null) return;
+    await mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           bearing: currentCameraPosition!.bearing,
@@ -383,9 +385,49 @@ class MapService {
   }
 
   Future<void> setStyle() async {
-    MapStyle style = MapStyleService.mapStyleFromTime(selectedTime!);
+    if (mapController == null) return;
+    //MapStyle style = MapStyleService.mapStyleFromTime(selectedTime!);
+    MapStyle style = MapStyle.standard;
     String styleJson = await MapStyleService.getJsonStyle(style);
     mapController!.setMapStyle(styleJson);
     MapStyleService.updateTheme();
+  }
+
+  Future<void> initShowAnimation(LatLng restaurantPosition) async {
+    if (mapController == null) return;
+
+    // Se mueve la cámara a la posición del restaurante con un zoom de 18.
+    CameraPosition newCam =
+        CameraPosition(target: restaurantPosition, zoom: 18);
+    await mapController!.animateCamera(CameraUpdate.newCameraPosition(newCam));
+
+    // Esperar para asegurar que ha terminado el paso anterior
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Se inicia la animación de rotación alrededor del restaurante
+    await animateAroundRestaurant(restaurantPosition);
+  }
+
+  Future<void> animateAroundRestaurant(LatLng restaurantPosition) async {
+    const int totalSteps = 72; // Número de pasos en la animación
+    const Duration stepDuration = Duration(
+        milliseconds: 150); // Duración entre cada paso de la animación.
+    double bearing = 0;
+
+    for (int i = 0; i < totalSteps; i++) {
+      bearing = (i * 360 / totalSteps).toDouble();
+      print('bearing $bearing');
+      await mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: restaurantPosition,
+            zoom: 18.0,
+            tilt: 45.0,
+            bearing: bearing,
+          ),
+        ),
+      );
+      await Future.delayed(stepDuration);
+    }
   }
 }

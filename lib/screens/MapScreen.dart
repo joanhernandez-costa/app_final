@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:app_final/models/WeatherData.dart';
 import 'package:app_final/services/MapService/MapService.dart';
-import 'package:app_final/services/MapService/MapStyleService.dart';
 import 'package:app_final/services/StorageService.dart';
 import 'package:app_final/services/ThemeService.dart';
 import 'package:app_final/widgets/CustomMapBuilder.dart';
@@ -25,7 +23,6 @@ class MapScreen extends StatefulWidget {
 
 class MapScreenState extends State<MapScreen> {
   bool is3DView = false;
-  List<WeatherData>? forecasts;
 
   double? userHeadingDirection = 0;
   double mapRotation = 0.0;
@@ -47,17 +44,17 @@ class MapScreenState extends State<MapScreen> {
       });
       updateCompassDirection();
     });
-    forecasts = WeatherData.weatherForecasts;
+
     sunrise = DateTime(2024, 4, 30, 7, 14);
     sunset = DateTime(2024, 4, 30, 21, 23);
-    //sunrise = forecasts![0].sunrise;
-    //sunset = forecasts![0].sunset;
     totalDayLength = sunset.difference(sunrise);
 
     setInitialSliderValue();
-    widget.mapService.setSelectedTime(getTimeFromSlider());
-    MapStyleService.setMapStyleFromWeather(forecasts![0]);
-    widget.mapService.setStyle();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.mapService.setSelectedTime(getTimeFromSlider());
+      widget.mapService.setStyle();
+    });
   }
 
   @override
@@ -98,7 +95,8 @@ class MapScreenState extends State<MapScreen> {
   }
 
   void setInitialSliderValue() async {
-    sliderValue = await StorageService.loadFloat('sliderValue') ?? 0.0;
+    //sliderValue = await StorageService.loadFloat('sliderValue') ?? 0.0;
+    sliderValue = 0.0;
   }
 
   String getLabelForValue() {
@@ -113,12 +111,6 @@ class MapScreenState extends State<MapScreen> {
         ((userHeadingDirection ?? 0) - mapRotation - 45) % 360;
     double angleInRadians = combinedAngle * (pi / 180);
 
-    if (forecasts == null || forecasts!.isEmpty) {
-      return const Scaffold(
-        body: Center(child: Text('No forecast data available')),
-      );
-    }
-
     return Scaffold(
       body: Stack(
         children: [
@@ -128,49 +120,21 @@ class MapScreenState extends State<MapScreen> {
             left: 10,
             right: 10,
             child: RestaurantSearchWidget(
-              onSelected: (restaurant) {
-                widget.mapService.move(LatLng(
+              onSelected: (restaurant) async {
+                print('Restaurante elegido');
+                // Ocultar el teclado
+                FocusScope.of(context).unfocus();
+                is3DView = true;
+
+                // Esperar a que se estabilice el mapa
+                await Future.delayed(const Duration(milliseconds: 300));
+
+                // Iniciar la animación
+                await widget.mapService.move(LatLng(
                     restaurant.data.latitude, restaurant.data.longitude));
               },
             ),
           ),
-          /*
-          if (forecasts != null )
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 90,
-              left: 10,
-              right: 10,
-              child: Container(
-                height: 120,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: forecasts!.length,
-                  itemBuilder: (context, index) {
-                    final forecast = forecasts![index];
-                    return Container(
-                      width: 150,
-                      child: Card(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Image.network(forecast.getIconUrl(), width: 50),
-                            Text(
-                              DateFormat('EEE, d MMM', 'es_ES')
-                                  .format(forecast.timestamp),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text('${forecast.temperature}°C'),
-                            Text(forecast.weatherDescription),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          */
           Positioned(
             right: 10,
             bottom: 90,
@@ -220,7 +184,7 @@ class MapScreenState extends State<MapScreen> {
                         DateTime selectedTime = getTimeFromSlider();
 
                         widget.mapService.setSelectedTime(selectedTime);
-                        widget.mapService.setStyle();
+                        //widget.mapService.setStyle();
 
                         widget.mapService.onCameraIdle();
                       });
