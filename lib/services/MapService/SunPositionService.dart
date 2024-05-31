@@ -99,7 +99,7 @@ class SunPositionService {
     return 23.45 * sin(Utils.degreesToRadians((360/365) * (dayOfYear - 81)));
   }
 
-  /// Retorna la ecuación de tiempo en minutos.
+  /// Devuelve la ecuación de tiempo en minutos.
   double getEquationOfTime(DateTime localTime) {
     int dayOfYear = getDayOfYear(localTime);
     // Se calcula como una proporción del año transcurrido, expresada en grados.

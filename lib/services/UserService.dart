@@ -18,8 +18,8 @@ class UserService {
 
     supabaseClient.auth.onAuthStateChange.listen((data) async {
       if (data.session != null) {
-        AppUser? userAfterEvent = registeredUsers.firstWhereOrNull(
-          (user) => user.id == data.session!.user.id);
+        AppUser? userAfterEvent = registeredUsers
+            .firstWhereOrNull((user) => user.id == data.session!.user.id);
         if (!isAppUser(userAfterEvent)) return;
 
         UserData? userData = await ApiService.fromAppUser(userAfterEvent!.id!);
@@ -43,7 +43,7 @@ class UserService {
           return;
         }
       }
-    }); 
+    });
   }
 
   static void handleInitialSession(AppUser initialUser, String userToken) {
@@ -52,7 +52,7 @@ class UserService {
     currentUser.value!.userData!.startSession();
     ApiService.userToken = userToken;
 
-    NavigationService.replaceScreen(const HomeScreen());
+    NavigationService.replaceScreen(const SignInScreen());
   }
 
   static void handleSignIn(AppUser userSignedIn, String userToken) {
@@ -60,14 +60,15 @@ class UserService {
     currentUser.value = userSignedIn;
     currentUser.value!.userData!.startSession();
     ApiService.userToken = userToken;
-    
+
     NavigationService.replaceScreen(const HomeScreen());
   }
 
   static Future<void> handleSignOut() async {
     print('Cerrando sesión...');
     currentUser.value!.userData!.endSession();
-    await StorageService.saveGeneric('lastUser', currentUser.value!, AppUser.toJson);
+    await StorageService.saveGeneric(
+        'lastUser', currentUser.value!, AppUser.toJson);
     currentUser.value = null;
     ApiService.userToken = null;
 

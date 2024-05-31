@@ -92,6 +92,7 @@ class HomeScreenState extends State<HomeScreen> {
       ),
       body: buildScreen(),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: ThemeService.currentTheme.background,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.map),

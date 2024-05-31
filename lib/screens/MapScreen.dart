@@ -37,6 +37,8 @@ class MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Suscribirse a los eventos de la brújula para obtener la dirección del usuario.
     compassSubscription = FlutterCompass.events!.listen((CompassEvent event) {
       if (!mounted) return;
       setState(() {
@@ -45,12 +47,14 @@ class MapScreenState extends State<MapScreen> {
       updateCompassDirection();
     });
 
+    // Inicializar los tiempo de amanecer y atardecer.
     sunrise = DateTime(2024, 4, 30, 7, 14);
     sunset = DateTime(2024, 4, 30, 21, 23);
     totalDayLength = sunset.difference(sunrise);
 
     setInitialSliderValue();
 
+    // Configurar el estilo del mapa y la hora seleccionada
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.mapService.setSelectedTime(getTimeFromSlider());
       widget.mapService.setStyle();
@@ -59,11 +63,13 @@ class MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    // Cancelar la suscripción a la brújula y guarda el valor del deslizador.
     compassSubscription?.cancel();
     StorageService.saveFloat('sliderValue', sliderValue);
     super.dispose();
   }
 
+  // Actualiza la dirección de la brújula en el mapa.
   void updateCompassDirection() {
     if (widget.mapService.mapController == null) return;
 
@@ -75,6 +81,7 @@ class MapScreenState extends State<MapScreen> {
     }
   }
 
+  // Restablece la rotación del mapa a 0.
   void resetMapRotation() {
     if (widget.mapService.mapController == null) return;
 
@@ -94,11 +101,13 @@ class MapScreenState extends State<MapScreen> {
     });
   }
 
+  // Establece el valor inicial del deslizador.
   void setInitialSliderValue() async {
     //sliderValue = await StorageService.loadFloat('sliderValue') ?? 0.0;
     sliderValue = 0.0;
   }
 
+  // Obtiene la etiqueta de la hora para el valor del deslizador.
   String getLabelForValue() {
     DateTime time = getTimeFromSlider();
     return DateFormat('HH:mm').format(time);

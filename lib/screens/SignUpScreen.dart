@@ -51,6 +51,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           style: TextStyle(color: ThemeService.currentTheme.textOnPrimary),
         ),
         backgroundColor: ThemeService.currentTheme.secondary,
+        automaticallyImplyLeading: true,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),

@@ -33,10 +33,12 @@ class MapService {
       required this.onPolygonsUpdated,
       required this.onCirclesUpdated});
 
+  // Establece el controlador del mapa.
   void setMapController(GoogleMapController controller) {
     mapController = controller;
   }
 
+  // Actualiza la posición de la cámara.
   void updateCameraPosition(CameraPosition newCameraPosition) {
     currentCameraPosition = newCameraPosition;
   }
@@ -46,6 +48,7 @@ class MapService {
     await initShowAnimation(newPosition);
   }
 
+  // Se llama cada vez que el usuario mueve la cámara
   Future<void> onCameraIdle() async {
     if (mapController == null) return;
     // Obtiene el zoom del mapa
@@ -53,6 +56,7 @@ class MapService {
     visibleRegion = await mapController!.getVisibleRegion();
 
     if (zoom! > 15) {
+      // Dibuja los nuevos marcadores y polígonos
       await updateVisibleMarkers();
       await loadPolygons();
       //await loadIncrementalShadows();
@@ -64,6 +68,7 @@ class MapService {
     }
   }
 
+  // Actualiza los marcadores visibles en el mapa.
   Future<void> updateVisibleMarkers() async {
     if (mapController == null || visibleRegion == null) return;
 
@@ -137,6 +142,7 @@ class MapService {
     return marker;
   }
 
+  // Crea un mapa personalizado para el marcador.
   Future<Uint8List> createCustomMarkerBitmap(
       IconData icon, Color color, Color backgroundColor, int size) async {
     final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
@@ -174,6 +180,7 @@ class MapService {
     return byteData!.buffer.asUint8List();
   }
 
+  // Carga los polígonos en el mapa
   Future<void> loadPolygons() async {
     if (mapController == null) return;
 
@@ -192,10 +199,9 @@ class MapService {
     onPolygonsUpdated(polygons);
   }
 
-  //Crea un polígono para mostrarlo en el mapa
+  // Dibuja el polígono de la sombra
   Polygon drawShadowPolygon(RestaurantData restaurant, DateTime time) {
     List<LatLng> shadowPerimeter = shadowService.getShadow(restaurant, time);
-    //shadowPerimeter.add(shadowPerimeter.first);
 
     return Polygon(
       polygonId: PolygonId('shadow_${restaurant.data.id}_$time'),
@@ -208,6 +214,7 @@ class MapService {
     );
   }
 
+  // Dibuja el polígono del perímetro de un restaurante.
   Polygon drawPerimeterPolygon(RestaurantData restaurant) {
     return Polygon(
       polygonId: PolygonId('perimeter_${restaurant.data.id}'),
@@ -219,6 +226,7 @@ class MapService {
     );
   }
 
+  // Carga en el mapa las sombras "incrementales".
   Future<void> loadIncrementalShadows() async {
     if (mapController == null) return;
 
@@ -248,7 +256,7 @@ class MapService {
     onPolygonsUpdated(polygons);
   }
 
-  // Función para crear un cuadrado en el mapa
+  // Función para dibujar un cuadrado en el mapa
   Polygon drawSquare(LatLng centerPosition, double sideLength) {
     const double latDegree = 110574;
     final double lngDegree = 111320 * cos(centerPosition.latitude * pi / 180);
@@ -284,7 +292,7 @@ class MapService {
     return square;
   }
 
-  // Función para crear un círculo en el mapa
+  // Función para dibujar un círculo en el mapa
   Circle drawCircle(LatLng center, double radius, Color fillColor) {
     final String circleIdVal = 'circle_${center.latitude}_${center.longitude}';
     final CircleId circleId = CircleId(circleIdVal);
@@ -302,6 +310,7 @@ class MapService {
     return circle;
   }
 
+  // Dibuja círculos en el mapa de forma dinámica.
   Future<void> loadCircles() async {
     if (mapController == null) return;
 
@@ -329,20 +338,24 @@ class MapService {
     onCirclesUpdated(circles);
   }
 
+  // Establece la hora seleccionada por el usuario con el Slider de tiempo.
   void setSelectedTime(DateTime selectedTime) {
     this.selectedTime = selectedTime;
   }
 
+  // Elimina los polígonos del mapa.
   void removePolygons() {
     polygons.clear();
     onPolygonsUpdated(polygons);
   }
 
+  // Elimina los marcadores del mapa.
   void removeMarkers() {
     markers.clear();
     onMarkersUpdated(markers);
   }
 
+  // Habilita la vista en 3D del mapa.
   Future<void> enable3DView() async {
     if (currentCameraPosition == null) return;
     await mapController?.animateCamera(
@@ -372,6 +385,7 @@ class MapService {
     );
   }
 
+  // Alterna entre la vista 3D y la vista normal del mapa.
   Future<void> toggle3DView() async {
     if (currentCameraPosition?.tilt == 0) {
       await enable3DView();
@@ -380,19 +394,22 @@ class MapService {
     }
   }
 
+  // Obtiene la orientación de la cámara respecto al norte.
   double getMapRotation() {
     return currentCameraPosition?.bearing ?? 0;
   }
 
+  // Establece el estilo del mapa
   Future<void> setStyle() async {
     if (mapController == null) return;
-    //MapStyle style = MapStyleService.mapStyleFromTime(selectedTime!);
-    MapStyle style = MapStyle.standard;
+
+    MapStyle style = MapStyleService.mapStyleFromTime(selectedTime!);
     String styleJson = await MapStyleService.getJsonStyle(style);
     mapController!.setMapStyle(styleJson);
     MapStyleService.updateTheme();
   }
 
+  // Inicia la animación para señalar un restaurante
   Future<void> initShowAnimation(LatLng restaurantPosition) async {
     if (mapController == null) return;
 
@@ -408,6 +425,7 @@ class MapService {
     await animateAroundRestaurant(restaurantPosition);
   }
 
+  // Anima la cámara alrededor del restaurante
   Future<void> animateAroundRestaurant(LatLng restaurantPosition) async {
     const int totalSteps = 72; // Número de pasos en la animación
     const Duration stepDuration = Duration(
@@ -416,7 +434,6 @@ class MapService {
 
     for (int i = 0; i < totalSteps; i++) {
       bearing = (i * 360 / totalSteps).toDouble();
-      print('bearing $bearing');
       await mapController!.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
